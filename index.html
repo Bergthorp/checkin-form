@@ -9,11 +9,11 @@
      DESIGN TOKENS — Hostaway-style. Tweak to restyle fast.
      ============================================================ */
   :root {
-    --teal:        #0e4f4a;   /* headings */
-    --teal-line:   #6cc0b4;   /* selected toggle / focus accent */
-    --mint:        #cdeee1;   /* button fill */
+    --teal:        #0e4f4a;
+    --teal-line:   #6cc0b4;
+    --mint:        #cdeee1;
     --mint-hover:  #b9e6d5;
-    --asterisk:    #e0633a;   /* required marker */
+    --asterisk:    #e0633a;
     --bg:          #f4f5f5;
     --surface:     #ffffff;
     --text:        #2b2f33;
@@ -39,28 +39,19 @@
 
   h1 { color: var(--teal); font-size: 40px; font-weight: 800; letter-spacing: -0.5px; }
   .sub { color: var(--text); font-size: 16px; margin-top: 4px; margin-bottom: 44px; }
-
   h2 { color: var(--teal); font-size: 22px; font-weight: 700; margin-bottom: 26px; }
-
   .req { color: var(--asterisk); margin-left: 2px; }
 
-  /* ---------- Sections / dividers ---------- */
   section { margin-bottom: 40px; }
-  .divider {
-    border: none; border-top: 3px dotted var(--border);
-    margin: 40px 0;
-  }
+  .divider { border: none; border-top: 3px dotted var(--border); margin: 40px 0; }
 
   /* ---------- Fields ---------- */
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 40px; }
   .field { margin-bottom: 4px; }
-  label.lbl {
-    display: block; font-size: 14px; color: var(--label);
-    margin-bottom: 8px;
-  }
+  label.lbl { display: block; font-size: 14px; color: var(--label); margin-bottom: 8px; }
   .note { font-size: 14px; color: var(--text-soft); margin-top: -18px; margin-bottom: 16px; }
 
-  input[type=text], input[type=email], input[type=tel], select {
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select {
     width: 100%; padding: 15px 16px;
     font-family: var(--font); font-size: 16px;
     border: 1.5px solid var(--border); border-radius: var(--radius);
@@ -72,15 +63,20 @@
     outline: none; border-color: var(--teal-line);
     box-shadow: 0 0 0 3px rgba(108,192,180,.25);
   }
+  input.invalid, select.invalid {
+    border-color: var(--asterisk);
+    box-shadow: 0 0 0 3px rgba(224,99,58,.12);
+  }
+  .err { display: none; color: var(--asterisk); font-size: 13px; margin-top: 7px; }
+  .err.show { display: block; }
 
-  /* ---------- Phone with country flag ---------- */
+  /* ---------- Phone ---------- */
   .phone { display: flex; }
   .phone .cc {
     display: flex; align-items: center; gap: 6px;
     border: 1.5px solid var(--border); border-right: none;
     border-radius: var(--radius) 0 0 var(--radius);
-    padding: 0 10px; background: #fbfcfc; cursor: pointer;
-    position: relative;
+    padding: 0 10px; background: #fbfcfc; cursor: pointer; position: relative;
   }
   .phone .cc select {
     border: none; background: transparent; padding: 12px 4px 12px 26px;
@@ -90,19 +86,18 @@
   .phone .cc .flag { position: absolute; left: 10px; font-size: 18px; pointer-events: none; }
   .phone .cc::after { content: '▾'; color: var(--text-soft); font-size: 11px; margin-left: -6px; }
   .phone input { border-radius: 0 var(--radius) var(--radius) 0; }
-  .phone input:focus { box-shadow: 0 0 0 3px rgba(108,192,180,.25); position: relative; z-index: 1; }
+  .phone input:focus { position: relative; z-index: 1; }
+  .phone.invalid .cc, .phone.invalid input { border-color: var(--asterisk); }
 
-  /* ---------- Time row (time field + AM/PM segmented + arrive-by) ---------- */
+  /* ---------- Time row ---------- */
   .timerow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
   .timerow .timebox {
-    width: 92px; padding: 13px 14px; text-align: center;
-    border: 1.5px solid var(--border); border-radius: var(--radius);
-    font-size: 16px; background: #fff;
+    width: auto; min-width: 104px; padding: 13px 30px 13px 14px; text-align: left;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7378' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
   }
-  .seg {
-    display: inline-flex; border: 1.5px solid var(--border); border-radius: var(--radius);
-    overflow: hidden;
-  }
+  .seg { display: inline-flex; border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .seg button {
     border: none; background: #fff; padding: 13px 22px;
     font-family: var(--font); font-size: 15px; font-weight: 700; color: var(--text-soft);
@@ -112,22 +107,21 @@
   .arriveby { min-width: 280px; }
   .arriveby select { color: var(--text-soft); }
 
-  /* ---------- Guest accordion ---------- */
-  .guest { }
+  /* ---------- Accordion (guests + additional) ---------- */
   .guest-head {
     display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; user-select: none;
+    cursor: pointer; user-select: none; border-radius: var(--radius);
   }
+  .guest-head:focus-visible { outline: 2px solid var(--teal-line); outline-offset: 4px; }
   .guest-head h2 { margin-bottom: 0; }
   .chev { color: var(--teal); font-size: 20px; transition: transform .2s; }
-  .guest.collapsed .chev { transform: rotate(180deg); }
-  .guest-body { margin-top: 26px; overflow: hidden; }
-  .guest.collapsed .guest-body { display: none; }
+  .collapsed .chev { transform: rotate(180deg); }
+  .guest-body { margin-top: 26px; }
+  .collapsed .guest-body { display: none; }
+  .guest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 40px; margin-bottom: 24px; }
 
-  /* ---------- Upload button ---------- */
+  /* ---------- Upload ---------- */
   .uplabel { display: block; font-size: 14px; color: var(--label); margin-bottom: 10px; }
-  .qlabel { display: block; font-size: 16px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
-  .q + .q { margin-top: 30px; }
   .upbtn {
     display: inline-block; background: var(--mint); color: var(--teal);
     font-weight: 700; font-size: 15px; padding: 13px 26px;
@@ -135,7 +129,14 @@
   }
   .upbtn:hover { background: var(--mint-hover); }
   .upbtn input { display: none; }
-  .upname { font-size: 14px; color: var(--teal); margin-top: 10px; font-weight: 600; display: none; }
+  .uppreview { margin-top: 14px; display: none; align-items: center; gap: 14px; }
+  .uppreview img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+  .uppreview .nm { font-size: 14px; color: var(--teal); font-weight: 600; }
+  .uppreview .rm { font-size: 13px; color: var(--text-soft); cursor: pointer; text-decoration: underline; }
+
+  /* ---------- Question prompts ---------- */
+  .qlabel { display: block; font-size: 16px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
+  .q + .q { margin-top: 30px; }
 
   /* ---------- Submit ---------- */
   .submitwrap { margin-top: 50px; }
@@ -145,6 +146,28 @@
     font-family: var(--font); cursor: pointer; transition: .15s;
   }
   .submit:hover { background: #0a3d39; }
+  .formerr { color: var(--asterisk); font-size: 14px; margin-top: 16px; display: none; }
+  .formerr.show { display: block; }
+
+  /* ---------- Confirmation ---------- */
+  #doneView { display: none; text-align: center; padding: 40px 0; }
+  .done-check {
+    width: 88px; height: 88px; margin: 0 auto 24px; border-radius: 50%;
+    background: var(--mint); color: var(--teal);
+    display: grid; place-items: center; font-size: 46px; font-weight: 800;
+    animation: pop .4s ease;
+  }
+  @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.12)} 100%{transform:scale(1)} }
+  #doneView h1 { margin-bottom: 12px; }
+  #doneView .sub { margin-bottom: 28px; }
+  .done-card {
+    max-width: 460px; margin: 0 auto; text-align: left;
+    background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 8px 22px;
+  }
+  .done-card .row { display: flex; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+  .done-card .row:last-child { border-bottom: none; }
+  .done-card .k { color: var(--text-soft); }
+  .done-card .v { font-weight: 700; color: var(--text); }
 
   /* ---------- Test toolbar (dev only — delete for prod) ---------- */
   .testbar {
@@ -153,119 +176,133 @@
     padding: 10px 16px; display: flex; gap: 10px; align-items: center;
     justify-content: center; flex-wrap: wrap; z-index: 50;
   }
-  .testbar button {
-    background: #2c3852; color: #fff; border: none; border-radius: 8px;
-    padding: 6px 12px; font-size: 12.5px; cursor: pointer; font-family: var(--font);
-  }
+  .testbar button { background: #2c3852; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12.5px; cursor: pointer; font-family: var(--font); }
   .testbar button:hover { background: var(--teal-line); color: #04201c; }
   .testbar .tag { background: var(--mint); color: var(--teal); font-weight: 700; padding: 2px 8px; border-radius: 6px; }
 
   @media (max-width: 760px) {
     body { padding: 32px 18px 110px; }
     h1 { font-size: 30px; }
-    .grid-2 { grid-template-columns: 1fr; gap: 24px; }
+    .grid-2, .guest-grid { grid-template-columns: 1fr; gap: 22px; }
   }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Online check-in</h1>
-    <div class="sub">Please fill in the form below</div>
 
-    <!-- ===== Contact details ===== -->
-    <section>
-      <h2>Contact details</h2>
-      <div class="grid-2">
-        <div class="field">
-          <label class="lbl">Email <span class="req">*</span></label>
-          <input type="email" id="email" placeholder="Email" />
-        </div>
-        <div class="field">
-          <label class="lbl">Mobile phone number <span class="req">*</span></label>
-          <div class="phone">
-            <div class="cc">
-              <span class="flag" id="ccFlag">🇺🇸</span>
-              <select id="ccSelect">
-                <option data-flag="🇺🇸" value="+1">+1</option>
-                <option data-flag="🇮🇸" value="+354">+354</option>
-                <option data-flag="🇬🇧" value="+44">+44</option>
-                <option data-flag="🇦🇪" value="+971">+971</option>
-                <option data-flag="🇩🇪" value="+49">+49</option>
-                <option data-flag="🇫🇷" value="+33">+33</option>
-                <option data-flag="🇪🇸" value="+34">+34</option>
-              </select>
+    <!-- ===================== FORM ===================== -->
+    <div id="formView">
+      <h1>Online check-in</h1>
+      <div class="sub">Please fill in the form below</div>
+
+      <!-- Contact details -->
+      <section>
+        <h2>Contact details</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label class="lbl">Email <span class="req">*</span></label>
+            <input type="email" id="email" placeholder="Email" />
+            <div class="err" data-for="email">Please enter a valid email address.</div>
+          </div>
+          <div class="field">
+            <label class="lbl">Mobile phone number <span class="req">*</span></label>
+            <div class="phone" id="phoneWrap">
+              <div class="cc">
+                <span class="flag" id="ccFlag">🇺🇸</span>
+                <select id="ccSelect">
+                  <option data-flag="🇺🇸" value="+1">+1</option>
+                  <option data-flag="🇮🇸" value="+354">+354</option>
+                  <option data-flag="🇬🇧" value="+44">+44</option>
+                  <option data-flag="🇦🇪" value="+971">+971</option>
+                  <option data-flag="🇩🇪" value="+49">+49</option>
+                  <option data-flag="🇫🇷" value="+33">+33</option>
+                  <option data-flag="🇪🇸" value="+34">+34</option>
+                </select>
+              </div>
+              <input type="tel" id="phone" placeholder="+1" />
             </div>
-            <input type="tel" id="phone" placeholder="+1" />
+            <div class="err" data-for="phone">Please enter your mobile number.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Arrival -->
+      <section>
+        <h2>Estimated arrival time <span class="req">*</span></h2>
+        <div class="note">Check-in is available starting 3 PM</div>
+        <div class="timerow">
+          <select class="timebox" id="arrTime"></select>
+          <div class="seg" data-seg="arr">
+            <button type="button" data-ampm="AM" aria-pressed="false">AM</button>
+            <button type="button" data-ampm="PM" class="sel" aria-pressed="true">PM</button>
+          </div>
+          <div class="arriveby">
+            <select id="arriveBy">
+              <option value="">I arrive by</option>
+              <option>Car</option><option>Plane</option><option>Train</option>
+              <option>Bus</option><option>Taxi</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Departure -->
+      <section>
+        <h2>Estimated departure time <span class="req">*</span></h2>
+        <div class="note">Check-out is available until 11 AM</div>
+        <div class="timerow">
+          <select class="timebox" id="depTime"></select>
+          <div class="seg" data-seg="dep">
+            <button type="button" data-ampm="AM" class="sel" aria-pressed="true">AM</button>
+            <button type="button" data-ampm="PM" aria-pressed="false">PM</button>
+          </div>
+        </div>
+      </section>
+
+      <hr class="divider" />
+
+      <!-- Guests -->
+      <div id="guests"></div>
+
+      <hr class="divider" />
+
+      <!-- Additional info -->
+      <div id="addInfo">
+        <div class="guest-head" role="button" tabindex="0" aria-expanded="true">
+          <h2>Additional info</h2>
+          <span class="chev">⌃</span>
+        </div>
+        <div class="guest-body">
+          <div class="q">
+            <label class="qlabel">Need parking? Please enter your full vehicle plate details (code + number) for garage access. Don’t have them yet? Type “Later” and send them before arrival. No parking? Type “No parking.”</label>
+            <input type="text" id="parking" placeholder="Your answer here" />
+          </div>
+          <div class="q">
+            <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
+            <input type="text" id="sofabed" placeholder="Your answer here" />
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ===== Arrival time ===== -->
-    <section>
-      <h2>Estimated arrival time <span class="req">*</span></h2>
-      <div class="note">Check-in is available starting 3 PM</div>
-      <div class="timerow">
-        <input type="text" class="timebox" id="arrTime" value="03:00" />
-        <div class="seg" data-seg="arr">
-          <button type="button" data-ampm="AM">AM</button>
-          <button type="button" class="sel" data-ampm="PM">PM</button>
-        </div>
-        <div class="arriveby">
-          <select id="arriveBy">
-            <option value="">I arrive by</option>
-            <option>Car</option>
-            <option>Plane</option>
-            <option>Train</option>
-            <option>Bus</option>
-            <option>Taxi</option>
-            <option>Other</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== Departure time ===== -->
-    <section>
-      <h2>Estimated departure time <span class="req">*</span></h2>
-      <div class="note">Check-out is available until 11 AM</div>
-      <div class="timerow">
-        <input type="text" class="timebox" id="depTime" value="11:00" />
-        <div class="seg" data-seg="dep">
-          <button type="button" class="sel" data-ampm="AM">AM</button>
-          <button type="button" data-ampm="PM">PM</button>
-        </div>
-      </div>
-    </section>
-
-    <hr class="divider" />
-
-    <!-- ===== Guests ===== -->
-    <div id="guests"></div>
-
-    <hr class="divider" />
-
-    <!-- ===== Additional info ===== -->
-    <div class="guest" id="addInfo">
-      <div class="guest-head">
-        <h2>Additional info</h2>
-        <span class="chev">⌃</span>
-      </div>
-      <div class="guest-body">
-        <div class="q">
-          <label class="qlabel">Need parking? Please enter your full vehicle plate details (code + number) for garage access. Don’t have them yet? Type “Later” and send them before arrival. No parking? Type “No parking.”</label>
-          <input type="text" id="parking" placeholder="Your answer here" />
-        </div>
-        <div class="q">
-          <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
-          <input type="text" id="sofabed" placeholder="Your answer here" />
-        </div>
+      <div class="submitwrap">
+        <button class="submit" id="submitBtn">Submit check-in</button>
+        <div class="formerr" id="formErr">Please fix the highlighted fields above.</div>
       </div>
     </div>
 
-    <div class="submitwrap">
-      <button class="submit" id="submitBtn">Submit check-in</button>
+    <!-- ===================== CONFIRMATION ===================== -->
+    <div id="doneView">
+      <div class="done-check">✓</div>
+      <h1>You’re all checked in!</h1>
+      <div class="sub">We’ve received your details. Your arrival instructions will be sent before check-in.</div>
+      <div class="done-card">
+        <div class="row"><span class="k">Lead guest</span><span class="v" id="doneName">—</span></div>
+        <div class="row"><span class="k">Guests</span><span class="v" id="doneGuests">—</span></div>
+        <div class="row"><span class="k">Arrival</span><span class="v" id="doneArr">—</span></div>
+        <div class="row"><span class="k">Departure</span><span class="v" id="doneDep">—</span></div>
+      </div>
     </div>
+
   </div>
 
   <!-- Dev test toolbar — delete for production -->
@@ -280,98 +317,273 @@
 <script>
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const LS_KEY = 'checkin-draft-v1';
 
-const state = { arrAmpm: 'PM', depAmpm: 'AM', cc: '+1' };
+/* ---- State ---- */
+const state = {
+  email: '', cc: '+1', flag: '🇺🇸', phone: '',
+  arrTime: '03:00', arrAmpm: 'PM',
+  depTime: '11:00', depAmpm: 'AM',
+  arriveBy: '',
+  parking: '', sofaBed: '',
+  guests: [
+    { fullName: 'Ahmed Abdul Karim', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' },
+    { fullName: '', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' }
+  ]
+};
+
+const NATIONALITIES = ['Iceland','United States','United Kingdom','United Arab Emirates','Germany','France','Spain','Italy','Netherlands','Canada','Australia','Other'];
+
+function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (s && typeof s === 'object') Object.assign(state, s);
+  } catch (e) {}
+}
+
+/* ---- Time options (12h, 30-min steps) ---- */
+function buildTimeOptions(sel, selected) {
+  const order = [12,1,2,3,4,5,6,7,8,9,10,11];
+  let html = '';
+  order.forEach(h => ['00','30'].forEach(m => {
+    const v = String(h).padStart(2,'0') + ':' + m;
+    html += `<option value="${v}"${v===selected?' selected':''}>${v}</option>`;
+  }));
+  sel.innerHTML = html;
+}
+
+/* ---- Contact + time render/bind ---- */
+function initContact() {
+  $('#email').value = state.email;
+  $('#ccSelect').value = state.cc;
+  $('#ccFlag').textContent = state.flag;
+  $('#phone').value = state.phone;
+  $('#phone').placeholder = state.cc;
+  $('#arriveBy').value = state.arriveBy;
+  buildTimeOptions($('#arrTime'), state.arrTime);
+  buildTimeOptions($('#depTime'), state.depTime);
+  $('#parking').value = state.parking;
+  $('#sofabed').value = state.sofaBed;
+  reflectAmpm();
+
+  $('#email').addEventListener('input', e => { state.email = e.target.value; clearErr('email'); save(); });
+  $('#phone').addEventListener('input', e => { state.phone = e.target.value; clearErr('phone'); save(); });
+  $('#ccSelect').addEventListener('change', e => {
+    const opt = e.target.selectedOptions[0];
+    state.cc = opt.value; state.flag = opt.dataset.flag;
+    $('#ccFlag').textContent = state.flag; $('#phone').placeholder = state.cc; save();
+  });
+  $('#arrTime').addEventListener('change', e => { state.arrTime = e.target.value; save(); });
+  $('#depTime').addEventListener('change', e => { state.depTime = e.target.value; save(); });
+  $('#arriveBy').addEventListener('change', e => { state.arriveBy = e.target.value; save(); });
+  $('#parking').addEventListener('input', e => { state.parking = e.target.value; save(); });
+  $('#sofabed').addEventListener('input', e => { state.sofaBed = e.target.value; save(); });
+}
 
 /* ---- AM/PM segmented toggles ---- */
+function reflectAmpm() {
+  $$('.seg').forEach(seg => {
+    const key = seg.dataset.seg === 'arr' ? 'arrAmpm' : 'depAmpm';
+    $$('button', seg).forEach(b => {
+      const on = b.dataset.ampm === state[key];
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', on);
+    });
+  });
+}
 $$('.seg').forEach(seg => {
   const key = seg.dataset.seg === 'arr' ? 'arrAmpm' : 'depAmpm';
   $$('button', seg).forEach(b => b.addEventListener('click', () => {
-    $$('button', seg).forEach(x => x.classList.remove('sel'));
-    b.classList.add('sel');
-    state[key] = b.dataset.ampm;
+    state[key] = b.dataset.ampm; reflectAmpm(); save();
   }));
 });
 
-/* ---- Country code flag sync ---- */
-const ccSelect = $('#ccSelect');
-ccSelect.addEventListener('change', () => {
-  const opt = ccSelect.selectedOptions[0];
-  $('#ccFlag').textContent = opt.dataset.flag;
-  state.cc = opt.value;
-  $('#phone').placeholder = opt.value;
-});
+/* ---- Accordion helper (keyboard accessible) ---- */
+function wireAccordion(headEl) {
+  const root = headEl.parentElement;
+  const toggle = () => {
+    const collapsed = root.classList.toggle('collapsed');
+    headEl.setAttribute('aria-expanded', !collapsed);
+  };
+  headEl.addEventListener('click', toggle);
+  headEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+}
 
-/* ---- Guests (lead = pre-filled name from booking) ---- */
-const guestNames = ['Ahmed Abdul Karim', 'Guest 2'];
+/* ---- Guests ---- */
 const guestsEl = $('#guests');
+function guestTitle(i) { return state.guests[i].fullName.trim() || `Guest ${i + 1}`; }
 
 function renderGuests() {
   guestsEl.innerHTML = '';
-  guestNames.forEach((name, i) => {
-    const g = document.createElement('div');
-    g.className = 'guest';
-    g.innerHTML = `
-      <div class="guest-head">
-        <h2>${name}</h2>
+  state.guests.forEach((g, i) => {
+    const block = document.createElement('div');
+    block.className = 'guest';
+    const natOpts = ['<option value="">Select…</option>']
+      .concat(NATIONALITIES.map(n => `<option${n===g.nationality?' selected':''}>${n}</option>`)).join('');
+    const docOpts = ['Passport','National ID','Driver’s license']
+      .map(d => `<option${d===g.docType?' selected':''}>${d}</option>`).join('');
+    block.innerHTML = `
+      <div class="guest-head" role="button" tabindex="0" aria-expanded="true">
+        <h2 data-title>${guestTitle(i)}</h2>
         <span class="chev">⌃</span>
       </div>
       <div class="guest-body">
-        <label class="uplabel">ID photo</label>
-        <label class="upbtn">Upload file
-          <input type="file" accept="image/*" data-idx="${i}" />
-        </label>
-        <div class="upname"></div>
+        <div class="guest-grid">
+          <div class="field">
+            <label class="lbl">Full name <span class="req">*</span></label>
+            <input type="text" data-f="fullName" value="${g.fullName.replace(/"/g,'&quot;')}" placeholder="Full name" />
+            <div class="err" data-gerr="fullName">Please enter the guest’s full name.</div>
+          </div>
+          <div class="field">
+            <label class="lbl">Nationality <span class="req">*</span></label>
+            <select data-f="nationality">${natOpts}</select>
+            <div class="err" data-gerr="nationality">Please select a nationality.</div>
+          </div>
+          <div class="field">
+            <label class="lbl">Date of birth</label>
+            <input type="date" data-f="dob" value="${g.dob}" />
+          </div>
+          <div class="field">
+            <label class="lbl">Document type</label>
+            <select data-f="docType">${docOpts}</select>
+          </div>
+          <div class="field">
+            <label class="lbl">Document number</label>
+            <input type="text" data-f="docNum" value="${g.docNum.replace(/"/g,'&quot;')}" placeholder="Document number" />
+          </div>
+        </div>
+        <label class="uplabel">ID photo <span class="req">*</span></label>
+        <label class="upbtn">Upload file<input type="file" accept="image/*" /></label>
+        <div class="err" data-gerr="idPhoto">Please upload an ID photo.</div>
+        <div class="uppreview">
+          <img alt="ID preview" />
+          <div><div class="nm"></div><span class="rm">Remove</span></div>
+        </div>
       </div>`;
-    // accordion toggle
-    $('.guest-head', g).addEventListener('click', () => g.classList.toggle('collapsed'));
-    // file name display
-    $('input[type=file]', g).addEventListener('change', e => {
-      const f = e.target.files[0]; if (!f) return;
-      const nm = $('.upname', g);
-      nm.textContent = '✓ ' + f.name; nm.style.display = 'block';
+
+    // accordion
+    wireAccordion($('.guest-head', block));
+
+    // text/select fields
+    $$('[data-f]', block).forEach(inp => {
+      const f = inp.dataset.f;
+      const evt = inp.tagName === 'SELECT' ? 'change' : 'input';
+      inp.addEventListener(evt, () => {
+        g[f] = inp.value;
+        if (f === 'fullName') $('[data-title]', block).textContent = guestTitle(i);
+        if (f === 'nationality') clearGErr(block, 'nationality');
+        if (f === 'fullName') clearGErr(block, 'fullName');
+        save();
+      });
     });
-    guestsEl.appendChild(g);
-    if (i < guestNames.length - 1) guestsEl.appendChild(Object.assign(document.createElement('hr'), { className: 'divider' }));
+
+    // file upload + preview
+    const fileInp = $('input[type=file]', block);
+    const prev = $('.uppreview', block);
+    function showPreview() {
+      if (g.idPreview) {
+        $('img', prev).src = g.idPreview;
+        $('.nm', prev).textContent = g.idPhoto;
+        prev.style.display = 'flex';
+      } else { prev.style.display = 'none'; }
+    }
+    fileInp.addEventListener('change', e => {
+      const file = e.target.files[0]; if (!file) return;
+      if (!/^image\//.test(file.type)) { alert('Please upload an image file (JPG or PNG).'); return; }
+      if (file.size > 10 * 1024 * 1024) { alert('File is too large. Max 10MB.'); return; }
+      const reader = new FileReader();
+      reader.onload = ev => { g.idPhoto = file.name; g.idPreview = ev.target.result; showPreview(); clearGErr(block, 'idPhoto'); save(); };
+      reader.readAsDataURL(file);
+    });
+    $('.rm', prev).addEventListener('click', () => { g.idPhoto = ''; g.idPreview = ''; fileInp.value = ''; showPreview(); save(); });
+    showPreview();
+
+    guestsEl.appendChild(block);
+    if (i < state.guests.length - 1)
+      guestsEl.appendChild(Object.assign(document.createElement('hr'), { className: 'divider' }));
   });
 }
-renderGuests();
 
-/* ---- Additional info accordion ---- */
-$('#addInfo .guest-head').addEventListener('click', () => $('#addInfo').classList.toggle('collapsed'));
+/* ---- Validation ---- */
+function showErr(id)  { const e = $(`.err[data-for="${id}"]`); if (e) e.classList.add('show'); }
+function clearErr(id) { const e = $(`.err[data-for="${id}"]`); if (e) e.classList.remove('show'); $('#'+id)?.classList.remove('invalid'); }
+function clearGErr(block, f) { const e = $(`.err[data-gerr="${f}"]`, block); if (e) e.classList.remove('show'); $(`[data-f="${f}"]`, block)?.classList.remove('invalid'); }
+
+function validate() {
+  let firstBad = null;
+  const fail = el => { if (!firstBad) firstBad = el; };
+
+  // email
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(state.email.trim())) {
+    $('#email').classList.add('invalid'); showErr('email'); fail($('#email'));
+  }
+  // phone
+  if (state.phone.trim().length < 4) {
+    $('#phoneWrap').classList.add('invalid'); showErr('phone'); fail($('#phoneWrap'));
+  }
+  // guests
+  $$('.guest').forEach((block, i) => {
+    const g = state.guests[i];
+    if (!g.fullName.trim())   { $('[data-f="fullName"]', block).classList.add('invalid'); $('.err[data-gerr="fullName"]', block).classList.add('show'); fail(block); ensureOpen(block); }
+    if (!g.nationality)       { $('[data-f="nationality"]', block).classList.add('invalid'); $('.err[data-gerr="nationality"]', block).classList.add('show'); fail(block); ensureOpen(block); }
+    if (!g.idPhoto)           { $('.err[data-gerr="idPhoto"]', block).classList.add('show'); fail(block); ensureOpen(block); }
+  });
+
+  return firstBad;
+}
+function ensureOpen(block) { block.classList.remove('collapsed'); $('.guest-head', block)?.setAttribute('aria-expanded', true); }
 
 /* ---- Submit ---- */
 $('#submitBtn').addEventListener('click', () => {
-  const payload = {
-    email: $('#email').value,
-    phone: state.cc + ' ' + $('#phone').value,
-    arrival: $('#arrTime').value + ' ' + state.arrAmpm,
-    departure: $('#depTime').value + ' ' + state.depAmpm,
-    arriveBy: $('#arriveBy').value,
-    guests: guestNames,
-    parking: $('#parking').value,
-    sofaBed: $('#sofabed').value
-  };
-  console.log('CHECK-IN SUBMITTED →', payload);
+  const bad = validate();
+  if (bad) {
+    $('#formErr').classList.add('show');
+    bad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  $('#formErr').classList.remove('show');
+  console.log('CHECK-IN SUBMITTED →', JSON.parse(JSON.stringify(state)));
+
+  // confirmation
+  $('#doneName').textContent = guestTitle(0);
+  $('#doneGuests').textContent = state.guests.length;
+  $('#doneArr').textContent = state.arrTime + ' ' + state.arrAmpm;
+  $('#doneDep').textContent = state.depTime + ' ' + state.depAmpm;
+  $('#formView').style.display = 'none';
+  $('#doneView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   $('#tState').textContent = 'submitted ✓ (see console)';
-  alert('Check-in submitted!\n\n' + JSON.stringify(payload, null, 2));
 });
+
+/* ---- Additional info accordion ---- */
+wireAccordion($('#addInfo .guest-head'));
 
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
-  $('#email').value = 'ahmed.karim@email.com';
-  ccSelect.value = '+354'; ccSelect.dispatchEvent(new Event('change'));
-  $('#phone').value = '555 1234';
-  $('#arriveBy').value = 'Plane';
-  $$('.guest input[type=file]').forEach(() => {});
-  $$('.guest .upname').forEach(n => { n.textContent = '✓ passport_demo.jpg'; n.style.display = 'block'; });
+  state.email = 'ahmed.karim@email.com'; state.cc = '+354'; state.flag = '🇮🇸'; state.phone = '555 1234';
+  state.arriveBy = 'Plane'; state.parking = 'A 12345'; state.sofaBed = 'Yes please';
+  state.guests.forEach((g, i) => {
+    if (!g.fullName) g.fullName = 'Guest ' + (i + 1) + ' Name';
+    g.nationality = 'Iceland'; g.docNum = 'X' + (1000000 + i);
+    g.idPhoto = 'passport_demo.jpg';
+    g.idPreview = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23cdeee1"/><text x="32" y="38" font-size="10" text-anchor="middle" fill="%230e4f4a">ID</text></svg>');
+  });
+  save(); initContact(); renderGuests();
   $('#tState').textContent = 'autofilled ✓';
 });
 $('#tAddGuest').addEventListener('click', () => {
-  guestNames.push('Guest ' + (guestNames.length + 1));
-  renderGuests();
+  state.guests.push({ fullName: '', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' });
+  save(); renderGuests();
 });
-$('#tReset').addEventListener('click', () => location.reload());
+$('#tReset').addEventListener('click', () => { localStorage.removeItem(LS_KEY); location.reload(); });
+
+/* ---- Init ---- */
+load();
+initContact();
+renderGuests();
 </script>
 </body>
 </html>
