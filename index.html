@@ -149,6 +149,12 @@
     cursor: pointer; transition: color .15s, transform .15s;
   }
   .wheel-item.active { color: var(--teal); transform: scale(1.18); }
+  .wheel-tag {
+    margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+    background: var(--mint); color: var(--teal);
+    font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    white-space: nowrap;
+  }
   .wheel-band {
     position: absolute; left: 12px; right: 12px; top: 50%; height: 48px;
     transform: translateY(-50%); border-radius: 10px;
@@ -460,7 +466,7 @@ function load() {
 
 /* ---- Time chips (no default — guest must choose) ---- */
 const ARR_SLOTS = [
-  { v: '15:00', t: '3:00 PM', tag: 'Earliest' },
+  { v: '15:00', t: '3:00 PM', tag: 'Earliest check-in' },
   { v: '16:00', t: '4:00 PM' },
   { v: '17:00', t: '5:00 PM' },
   { v: '18:00', t: '6:00 PM' },
@@ -479,7 +485,7 @@ const DEP_SLOTS = [
   { v: '08:00', t: '8:00 AM' },
   { v: '09:00', t: '9:00 AM' },
   { v: '10:00', t: '10:00 AM' },
-  { v: '11:00', t: '11:00 AM', tag: 'Latest' }
+  { v: '11:00', t: '11:00 AM', tag: 'Latest check-out' }
 ];
 function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
 
@@ -502,7 +508,7 @@ function setupWheels() {
     const wrap = $('#' + f.field), btn = $('#' + f.btn), wheel = $('#' + f.wheel),
           sc = $('#' + f.scroll), confirm = $('#' + f.confirm);
     sc.innerHTML = '<div class="wheel-pad"></div>'
-      + f.slots.map((s, i) => `<div class="wheel-item" data-idx="${i}">${s.t}</div>`).join('')
+      + f.slots.map((s, i) => `<div class="wheel-item" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`).join('')
       + '<div class="wheel-pad"></div>';
     const items = $$('.wheel-item', sc);
     let tentative = 0;
