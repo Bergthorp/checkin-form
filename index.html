@@ -236,13 +236,6 @@
             <button type="button" data-ampm="AM" aria-pressed="false">AM</button>
             <button type="button" data-ampm="PM" class="sel" aria-pressed="true">PM</button>
           </div>
-          <div class="arriveby">
-            <select id="arriveBy">
-              <option value="">I arrive by</option>
-              <option>Car</option><option>Plane</option><option>Train</option>
-              <option>Bus</option><option>Taxi</option><option>Other</option>
-            </select>
-          </div>
         </div>
       </section>
 
@@ -324,7 +317,6 @@ const state = {
   email: '', cc: '+1', flag: '🇺🇸', phone: '',
   arrTime: '03:00', arrAmpm: 'PM',
   depTime: '11:00', depAmpm: 'AM',
-  arriveBy: '',
   parking: '', sofaBed: '',
   guests: [
     { fullName: 'Ahmed Abdul Karim', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' },
@@ -360,7 +352,6 @@ function initContact() {
   $('#ccFlag').textContent = state.flag;
   $('#phone').value = state.phone;
   $('#phone').placeholder = state.cc;
-  $('#arriveBy').value = state.arriveBy;
   buildTimeOptions($('#arrTime'), state.arrTime);
   buildTimeOptions($('#depTime'), state.depTime);
   $('#parking').value = state.parking;
@@ -376,7 +367,6 @@ function initContact() {
   });
   $('#arrTime').addEventListener('change', e => { state.arrTime = e.target.value; save(); });
   $('#depTime').addEventListener('change', e => { state.depTime = e.target.value; save(); });
-  $('#arriveBy').addEventListener('change', e => { state.arriveBy = e.target.value; save(); });
   $('#parking').addEventListener('input', e => { state.parking = e.target.value; save(); });
   $('#sofabed').addEventListener('input', e => { state.sofaBed = e.target.value; save(); });
 }
@@ -564,7 +554,7 @@ wireAccordion($('#addInfo .guest-head'));
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.cc = '+354'; state.flag = '🇮🇸'; state.phone = '555 1234';
-  state.arriveBy = 'Plane'; state.parking = 'A 12345'; state.sofaBed = 'Yes please';
+  state.parking = 'A 12345'; state.sofaBed = 'Yes please';
   state.guests.forEach((g, i) => {
     if (!g.fullName) g.fullName = 'Guest ' + (i + 1) + ' Name';
     g.nationality = 'Iceland'; g.docNum = 'X' + (1000000 + i);
