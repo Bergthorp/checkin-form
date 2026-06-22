@@ -371,6 +371,138 @@
   .pay-secure { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 14px; }
   .pay-secure b { color: #635bff; letter-spacing: -.3px; }
 
+  /* ============================================================
+     STEP 2 — Optional extras (canal-view upgrade + damage waiver)
+     ============================================================ */
+  #extrasView {
+    background: var(--surface); border-radius: 22px; padding: 40px 44px 48px;
+    box-shadow: 0 6px 30px rgba(20, 35, 70, .07);
+  }
+  #extrasView[hidden] { display: none; }
+  #extrasView .brand { margin-bottom: 14px; }
+  .backlink {
+    display: inline-flex; align-items: center; gap: 6px; background: none; border: none;
+    padding: 0; margin-bottom: 24px; color: var(--text-soft);
+    font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: color .15s;
+  }
+  .backlink:hover { color: var(--teal); }
+  .backlink:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 6px; }
+  .extras-sub { font-size: 16px; color: var(--text-soft); margin-bottom: 38px; }
+
+  /* ---- Canal view upgrade ---- */
+  .canal-card {
+    border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden;
+    transition: border-color .18s, box-shadow .18s;
+  }
+  .canal-card.selected { border-color: #a9dcb9; box-shadow: 0 6px 22px rgba(46, 158, 91, .14); }
+  .canal-photo {
+    position: relative; height: 210px;
+    background:
+      radial-gradient(120% 80% at 76% 32%, rgba(255, 226, 158, .95), rgba(255, 170, 95, 0) 55%),
+      linear-gradient(to bottom, #aebfe0 0%, #e7c4a6 40%, #f1a064 56%, #8a6f86 70%, #45506a 100%);
+  }
+  .canal-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .canal-tag {
+    position: absolute; top: 12px; left: 12px; z-index: 1;
+    background: rgba(16, 52, 40, .88); color: #fff; font-size: 12.5px; font-weight: 800;
+    padding: 6px 12px; border-radius: 999px;
+  }
+  .canal-body { padding: 20px 22px 22px; }
+  .canal-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .canal-title { font-size: 19px; font-weight: 800; color: var(--teal); }
+  .canal-sub { font-size: 14px; color: var(--text-soft); margin-top: 5px; line-height: 1.5; max-width: 400px; }
+  .canal-price { font-size: 18px; font-weight: 800; color: var(--text); white-space: nowrap; }
+  .canal-btn {
+    margin-top: 18px; width: 100%; padding: 14px; border-radius: 12px;
+    border: 1.5px solid var(--teal); background: #fff; color: var(--teal);
+    font-family: var(--font); font-size: 15px; font-weight: 800; cursor: pointer; transition: .15s;
+  }
+  .canal-btn:hover { background: var(--mint); }
+  .canal-card.selected .canal-btn { background: var(--teal); color: #fff; }
+  .canal-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  /* ---- Damage deposit / waiver ---- */
+  .deposit-head { text-align: center; margin-bottom: 24px; }
+  .deposit-ic { display: inline-block; line-height: 0; }
+  .deposit-title { color: var(--text); font-size: 26px; font-weight: 800; margin-top: 12px; }
+  .deposit-q { font-size: 17px; font-weight: 700; color: var(--text); }
+  .deposit-qs { font-size: 14.5px; color: var(--text-soft); margin: 4px 0 20px; }
+
+  .opt-card {
+    display: flex; gap: 14px; align-items: flex-start;
+    border: 1.5px solid var(--border); border-radius: 14px; padding: 18px;
+    cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s;
+  }
+  .opt-card + .opt-card { margin-top: 16px; }
+  .opt-card:hover { border-color: var(--teal-line); }
+  .opt-card.selected { border-color: var(--teal); }
+  .opt-card.waiver.selected { border-color: #a9dcb9; background: #eef8f1; box-shadow: 0 4px 18px rgba(46, 158, 91, .10); }
+  .opt-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .opt-radio {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--teal-line);
+    flex: none; margin-top: 2px; position: relative; transition: .15s;
+  }
+  .opt-card.selected .opt-radio { background: var(--teal); border-color: var(--teal); }
+  .opt-card.waiver.selected .opt-radio { background: #2e9e5b; border-color: #2e9e5b; }
+  .opt-card.selected .opt-radio::after {
+    content: '✓'; position: absolute; inset: 0; display: grid; place-items: center;
+    color: #fff; font-size: 13px; font-weight: 800;
+  }
+  .opt-main { flex: 1; min-width: 0; }
+  .opt-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .opt-shield { line-height: 0; }
+  .opt-name { font-size: 18px; font-weight: 800; color: var(--text); }
+  .badge-popular {
+    margin-left: auto; background: #cdeede; color: #1f7a45;
+    font-size: 12px; font-weight: 800; padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .opt-price { font-size: 16px; color: var(--text-soft); margin: 10px 0 4px; }
+  .opt-price b { font-size: 22px; font-weight: 800; color: var(--text); }
+  .opt-features { list-style: none; margin: 8px 0 0; }
+  .opt-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14.5px; color: var(--text-soft); padding: 4px 0; line-height: 1.45;
+  }
+  .opt-features li::before {
+    content: '✓'; flex: none; width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid #9ed3b0; color: #2e9e5b; font-size: 11px; font-weight: 800;
+    display: grid; place-items: center; margin-top: 1px;
+  }
+  .opt-terms {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 12px;
+    background: none; border: none; padding: 2px 0; cursor: pointer;
+    color: #207a45; font-family: var(--font); font-size: 14.5px; font-weight: 800;
+  }
+  .opt-terms svg { display: block; }
+  .opt-terms:hover { text-decoration: underline; }
+  .opt-terms:focus-visible { outline: 2px solid #2e9e5b; outline-offset: 2px; border-radius: 4px; }
+  .opt-decline .opt-name { font-size: 17px; }
+  .opt-decline-sub { font-size: 14px; color: var(--text-soft); margin-top: 4px; }
+
+  /* ---- Damage waiver terms modal ---- */
+  #termsView[hidden] { display: none; }
+  .terms-backdrop { position: fixed; inset: 0; background: rgba(20, 28, 40, .55); z-index: 110; }
+  .terms-card {
+    position: fixed; z-index: 111; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 560px; max-width: 94vw; max-height: 88vh; display: flex; flex-direction: column;
+    background: #fff; border-radius: 16px; box-shadow: 0 24px 70px rgba(0, 0, 0, .3);
+    animation: payIn .25s ease both;
+  }
+  .terms-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px; border-bottom: 1px solid #eef0f2;
+  }
+  .terms-top h2 { margin: 0; font-size: 21px; color: var(--text); }
+  .terms-close { background: none; border: none; font-size: 24px; line-height: 1; color: var(--text-soft); cursor: pointer; padding: 2px 6px; }
+  .terms-close:hover { color: var(--text); }
+  .terms-body { padding: 20px 24px 26px; overflow-y: auto; font-size: 14px; color: var(--text-soft); line-height: 1.6; }
+  .terms-body h4 { color: var(--text); font-size: 14.5px; margin: 16px 0 4px; }
+  .terms-body h4:first-child { margin-top: 0; }
+  .terms-body p { margin-bottom: 8px; }
+  .terms-body ul { margin: 4px 0 8px 20px; }
+  .terms-body li { margin-bottom: 6px; }
+  .terms-body b { color: var(--text); }
+
   /* ---------- Test toolbar (dev only — delete for prod) ---------- */
   .testbar {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -384,9 +516,11 @@
 
   @media (max-width: 760px) {
     body { padding: 20px 12px 110px; }
-    #formView { padding: 28px 22px 34px; border-radius: 18px; }
+    #formView, #extrasView { padding: 28px 22px 34px; border-radius: 18px; }
     h1 { font-size: 28px; }
     .grid-2, .guest-grid { grid-template-columns: 1fr; gap: 22px; }
+    .canal-photo { height: 172px; }
+    .deposit-title { font-size: 23px; }
   }
 </style>
 </head>
@@ -528,8 +662,144 @@
       </section>
 
       <div class="submitwrap">
-        <button class="submit" id="submitBtn">Submit check-in</button>
+        <button class="submit" id="submitBtn">Continue</button>
         <div class="formerr" id="formErr">Please fix the highlighted fields above.</div>
+      </div>
+    </div>
+
+    <!-- ===================== STEP 2 — OPTIONAL EXTRAS ===================== -->
+    <div id="extrasView" hidden>
+      <button type="button" class="backlink" id="extrasBack">← Back to your details</button>
+      <div class="brand">
+        <img class="brand-mark" src="logo-mark.png" alt="" width="52" height="52" />
+        <h1>A few optional extras</h1>
+      </div>
+      <p class="extras-sub">Add these to your stay, or continue without them — completely up to you.</p>
+
+      <!-- Canal view upgrade -->
+      <section>
+        <div class="canal-card" id="canalCard">
+          <div class="canal-photo">
+            <span class="canal-tag" id="canalTag" hidden>✓ Added</span>
+            <img src="canal-view.jpg" alt="Apartment balcony overlooking the canal at sunset" onerror="this.style.display='none'" />
+          </div>
+          <div class="canal-body">
+            <div class="canal-row">
+              <div>
+                <div class="canal-title">Canal view apartment</div>
+                <div class="canal-sub">Same apartment, same amenities — we simply move you to a unit overlooking the water. Just a better view.</div>
+              </div>
+              <div class="canal-price">+$100</div>
+            </div>
+            <button type="button" class="canal-btn" id="canalBtn">Add canal view</button>
+          </div>
+        </div>
+      </section>
+
+      <hr class="divider" />
+
+      <!-- Damage deposit / waiver -->
+      <section>
+        <div class="deposit-head">
+          <span class="deposit-ic" aria-hidden="true">
+            <svg viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="15" fill="#57b6c4"/><g fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M17 21h19a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H20a3 3 0 0 1-3-3V21z"/><path d="M17 21v-1.5a2.5 2.5 0 0 1 2.5-2.5H34"/></g><circle cx="34" cy="29.5" r="2" fill="#fff"/></svg>
+          </span>
+          <h2 class="deposit-title">Damage deposit</h2>
+        </div>
+
+        <div class="deposit-q">Choose your protection option</div>
+        <div class="deposit-qs">Select how you’d like to handle potential damages during your stay</div>
+
+        <div class="opt-card waiver selected" id="waiverCard" role="button" tabindex="0" aria-pressed="true">
+          <span class="opt-radio" aria-hidden="true"></span>
+          <div class="opt-main">
+            <div class="opt-head">
+              <span class="opt-shield" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#207a45" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/></svg>
+              </span>
+              <span class="opt-name">Damage waiver</span>
+              <span class="badge-popular">Most Popular</span>
+            </div>
+            <div class="opt-price"><b>$58</b> one-time fee</div>
+            <ul class="opt-features">
+              <li>Covers accidental damages up to set limit</li>
+              <li>Non-refundable, no deposit needed</li>
+              <li>Best for peace of mind during your stay</li>
+            </ul>
+            <button type="button" class="opt-terms" id="termsOpen">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1" stroke-linecap="round"/></svg>
+              View terms and conditions
+            </button>
+          </div>
+        </div>
+
+        <div class="opt-card decline" id="declineCard" role="button" tabindex="0" aria-pressed="false">
+          <span class="opt-radio" aria-hidden="true"></span>
+          <div class="opt-main">
+            <div class="opt-name opt-decline">Decline Coverage</div>
+            <div class="opt-decline-sub">I accept responsibility for any accidental damages</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Order summary -->
+      <section id="orderSummary" hidden>
+        <div class="up-card">
+          <div class="up-head">Order summary</div>
+          <div id="orderList"></div>
+          <div class="up-note">Charged securely via Stripe when you complete check-in.</div>
+        </div>
+      </section>
+
+      <div class="submitwrap">
+        <button class="submit" id="finishBtn">Complete check-in</button>
+      </div>
+    </div>
+
+    <!-- ===================== DAMAGE WAIVER TERMS ===================== -->
+    <div id="termsView" hidden>
+      <div class="terms-backdrop"></div>
+      <div class="terms-card" role="dialog" aria-modal="true" aria-label="Terms and conditions">
+        <div class="terms-top">
+          <h2>Terms and conditions</h2>
+          <button type="button" class="terms-close" id="termsClose" aria-label="Close">✕</button>
+        </div>
+        <div class="terms-body">
+          <h4>Damage Waiver Agreement</h4>
+          <p>Thank you for choosing us for your stay. To enhance your experience and offer peace of mind, we provide a Damage Waiver option. This waiver covers reported incidental damage to the property during your stay, ensuring that minor mishaps don’t disrupt your visit or your finances.</p>
+          <h4>Waiver Fee</h4>
+          <ul><li>A non-refundable fee of $29 per night (Maximum: $200) is applied to your stay.</li></ul>
+          <h4>Procedure for Reporting Damages</h4>
+          <ul>
+            <li>Please report any damages that occur during your stay to the management as soon as possible.</li>
+            <li>Unreported damages found after checkout will not be covered by this waiver and may result in additional charges.</li>
+          </ul>
+          <h4>Damage Waiver Coverage</h4>
+          <ul>
+            <li>The Damage Waiver covers you for any accidental damages to the room or property furnishings that occur during your stay, up to a maximum amount of $3000.</li>
+            <li>This coverage includes but is not limited to:
+              <ul>
+                <li><b>Furniture and Fixtures:</b> Minor damages such as scratches, scuffs, or stains on furniture, flooring, or walls.</li>
+                <li><b>Household Items:</b> Breakage of kitchenware, lamps, or other household items due to accidental mishandling.</li>
+                <li><b>Linens and Towels:</b> Damage to bedding, towels, or other linens beyond normal wear and tear.</li>
+              </ul>
+            </li>
+          </ul>
+          <h4>Exclusions</h4>
+          <ul>
+            <li>The Damage Waiver does not cover:
+              <ul>
+                <li><b>Intentional Damage:</b> Any damage caused by intentional acts, gross negligence, or failure to follow the property’s rules.</li>
+                <li><b>Unauthorized Activities:</b> Damages resulting from unauthorized activities such as smoking indoors, hosting events or parties, or any illegal activities.</li>
+                <li><b>Excessive Cleaning:</b> Costs associated with excessive cleaning beyond what is reasonably expected from typical use.</li>
+                <li><b>Pet-Related Damage:</b> Damages caused by pets to furniture, walls, doors.</li>
+                <li><b>Property Loss or Theft:</b> Loss or theft of property items, including but not limited to electronics, décor, and personal belongings.</li>
+              </ul>
+            </li>
+          </ul>
+          <h4>Acceptance</h4>
+          <ul><li>By opting into the Damage Waiver, you agree to the terms outlined above. Non-acceptance of the Damage Waiver requires a refundable security deposit, the amount of which is based on the property and duration of the stay.</li></ul>
+        </div>
       </div>
     </div>
 
@@ -574,6 +844,8 @@
         <div class="row"><span class="k">Guests</span><span class="v" id="doneGuests">—</span></div>
         <div class="row"><span class="k">Arrival</span><span class="v" id="doneArr">—</span></div>
         <div class="row"><span class="k">Departure</span><span class="v" id="doneDep">—</span></div>
+        <div class="row" id="doneCanalRow" hidden><span class="k">Canal view</span><span class="v">Added ✓</span></div>
+        <div class="row"><span class="k">Damage protection</span><span class="v" id="doneWaiver">—</span></div>
         <div class="row" id="donePaidRow" hidden><span class="k">Paid via Stripe</span><span class="v" id="donePaid">—</span></div>
       </div>
     </div>
@@ -585,6 +857,7 @@
     <span class="tag">TEST</span>
     <button id="tFill">Autofill</button>
     <button id="tAddGuest">+ Guest</button>
+    <button id="tExtras">Step 2</button>
     <button id="tReset">Reset</button>
     <span id="tState" style="opacity:.7"></span>
   </div>
@@ -661,6 +934,7 @@ const state = {
   email: '', iso: 'AE', cc: '+971', phone: '',
   arrTime: '', depTime: '',
   earlyCheckin: '', lateCheckout: '',
+  canalView: '', damageWaiver: 'waiver',
   parking: '', plate: '', sofaBed: '',
   guests: [
     { idPhoto: '', idPreview: '' },
@@ -713,9 +987,15 @@ function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? 
 const GUARANTEE = { v: '13:00', t: '1:00 PM', price: 138 };
 const EARLY_OPTS = [ GUARANTEE ];   // kept so the upgrade summary helpers below resolve label/price
 const LATE_OPTS  = [ GUARANTEE ];
+// Step-2 add-ons (flat prices for the prototype; waiver would be $29/night capped at $200 in prod).
+const CANAL_PRICE  = 100;
+const WAIVER_PRICE = 58;
 function optPrice(opts, v) { const o = opts.find(x => x.v === v); return o && o.price ? o.price : 0; }
 function optLabel(opts, v) { const o = opts.find(x => x.v === v); return o ? o.t : ''; }
-function totalPrice() { return optPrice(EARLY_OPTS, state.earlyCheckin) + optPrice(LATE_OPTS, state.lateCheckout); }
+function earlyLateTotal() { return optPrice(EARLY_OPTS, state.earlyCheckin) + optPrice(LATE_OPTS, state.lateCheckout); }
+function canalPrice()  { return state.canalView ? CANAL_PRICE : 0; }
+function waiverPrice() { return state.damageWaiver === 'waiver' ? WAIVER_PRICE : 0; }
+function totalPrice()  { return earlyLateTotal() + canalPrice() + waiverPrice(); }
 
 // Which arrival/departure values trigger which contextual reaction.
 const ARR_EARLY = ['early', '12:00', '13:00', '14:00'];   // before 3 PM → expectation + early-access offer
@@ -808,20 +1088,20 @@ function addonRow(label, opts, v) {
   return `<div class="up-row"><span class="up-k">${label} · ${optLabel(opts, v)}</span><span class="up-v">${p ? '+$' + p : 'Free'}</span></div>`;
 }
 function renderUpsell() {
-  const box = $('#upsell'), list = $('#upsellList'), total = totalPrice();
+  const box = $('#upsell'), list = $('#upsellList'), total = earlyLateTotal();
   if (!box) return;
   const rows = [];
   if (state.earlyCheckin) rows.push(addonRow('Early check-in', EARLY_OPTS, state.earlyCheckin));
   if (state.lateCheckout) rows.push(addonRow('Late check-out', LATE_OPTS, state.lateCheckout));
   if (rows.length) {
     list.innerHTML = rows.join('')
-      + (total > 0 ? `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>` : '');
+      + (total > 0 ? `<div class="up-row up-total"><span class="up-k">Subtotal</span><span class="up-v">$${total}</span></div>` : '');
     box.hidden = false; box.classList.add('reveal');
   } else {
     box.hidden = true;
   }
   const btn = $('#submitBtn');
-  if (btn) btn.textContent = total > 0 ? `Pay $${total} & submit` : 'Submit check-in';
+  if (btn) btn.textContent = 'Continue';
 }
 function setupWheels() {
   const clamp = (f, idx) => Math.max(0, Math.min(f.slots.length - 1, idx));
@@ -1081,6 +1361,8 @@ function finalizeCheckin(paidAmount) {
   $('#doneGuests').textContent = state.guests.length;
   $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
   $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
+  $('#doneCanalRow').hidden = !state.canalView;
+  $('#doneWaiver').textContent = state.damageWaiver === 'waiver' ? 'Damage waiver added' : 'Declined';
   if (paidAmount > 0) {
     $('#donePaid').textContent = '$' + paidAmount;
     $('#donePaidRow').hidden = false;
@@ -1088,6 +1370,7 @@ function finalizeCheckin(paidAmount) {
     $('#donePaidRow').hidden = true;
   }
   $('#formView').style.display = 'none';
+  $('#extrasView').hidden = true;
   $('#payView').hidden = true;
   $('#doneView').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1098,6 +1381,8 @@ function openPay(total) {
   const items = [];
   if (state.earlyCheckin) items.push(`Early check-in (${optLabel(EARLY_OPTS, state.earlyCheckin)}) — $${optPrice(EARLY_OPTS, state.earlyCheckin)}`);
   if (state.lateCheckout) items.push(`Late check-out (${optLabel(LATE_OPTS, state.lateCheckout)}) — $${optPrice(LATE_OPTS, state.lateCheckout)}`);
+  if (state.canalView) items.push(`Canal view apartment — $${CANAL_PRICE}`);
+  if (state.damageWaiver === 'waiver') items.push(`Damage waiver — $${WAIVER_PRICE}`);
   $('#paySummary').innerHTML = items.join('<br>');
   $('#payAmount').textContent = '$' + total.toFixed(2);
   const btn = $('#payBtn');
@@ -1114,9 +1399,7 @@ $('#submitBtn').addEventListener('click', () => {
     return;
   }
   $('#formErr').classList.remove('show');
-  const total = totalPrice();
-  if (total > 0) openPay(total);
-  else finalizeCheckin(0);
+  showExtrasView();
 });
 
 $('#payClose').addEventListener('click', () => { $('#payView').hidden = true; });
@@ -1131,11 +1414,83 @@ $('#payBtn').addEventListener('click', () => {
   }, 1100);
 });
 
+/* ===== STEP 2 — optional extras (canal view + damage waiver) ===== */
+function renderExtras() {
+  // Canal view upgrade
+  const on = !!state.canalView;
+  $('#canalCard').classList.toggle('selected', on);
+  $('#canalTag').hidden = !on;
+  $('#canalBtn').textContent = on ? 'Canal view added · Remove' : `Add canal view  ·  +$${CANAL_PRICE}`;
+  // Damage waiver vs decline (mutually exclusive)
+  const wv = state.damageWaiver === 'waiver';
+  $('#waiverCard').classList.toggle('selected', wv);
+  $('#waiverCard').setAttribute('aria-pressed', wv);
+  $('#declineCard').classList.toggle('selected', !wv);
+  $('#declineCard').setAttribute('aria-pressed', !wv);
+  renderOrderSummary();
+}
+function renderOrderSummary() {
+  const box = $('#orderSummary'), list = $('#orderList'), total = totalPrice();
+  const row = (k, v) => `<div class="up-row"><span class="up-k">${k}</span><span class="up-v">+$${v}</span></div>`;
+  const rows = [];
+  if (state.earlyCheckin) rows.push(row('Early check-in · ' + optLabel(EARLY_OPTS, state.earlyCheckin), optPrice(EARLY_OPTS, state.earlyCheckin)));
+  if (state.lateCheckout) rows.push(row('Late check-out · ' + optLabel(LATE_OPTS, state.lateCheckout), optPrice(LATE_OPTS, state.lateCheckout)));
+  if (state.canalView)    rows.push(row('Canal view apartment', CANAL_PRICE));
+  if (state.damageWaiver === 'waiver') rows.push(row('Damage waiver', WAIVER_PRICE));
+  if (rows.length) {
+    list.innerHTML = rows.join('') + `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>`;
+    box.hidden = false;
+  } else {
+    box.hidden = true;
+  }
+  $('#finishBtn').textContent = total > 0 ? `Pay $${total} & complete check-in` : 'Complete check-in';
+}
+function showExtrasView() {
+  renderExtras();
+  $('#formView').style.display = 'none';
+  $('#extrasView').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('#tState').textContent = 'step 2 — extras';
+}
+function showFormView() {
+  $('#extrasView').hidden = true;
+  $('#formView').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('#tState').textContent = 'step 1 — details';
+}
+function wireExtras() {
+  $('#canalBtn').addEventListener('click', () => {
+    state.canalView = state.canalView ? '' : 'yes';
+    renderExtras(); save();
+  });
+  const setWaiver = v => { state.damageWaiver = v; renderExtras(); save(); };
+  $('#waiverCard').addEventListener('click', e => { if (e.target.closest('#termsOpen')) return; setWaiver('waiver'); });
+  $('#declineCard').addEventListener('click', () => setWaiver('decline'));
+  [['#waiverCard', 'waiver'], ['#declineCard', 'decline']].forEach(([sel, v]) => {
+    $(sel).addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setWaiver(v); }
+    });
+  });
+  $('#extrasBack').addEventListener('click', showFormView);
+  // Terms modal
+  const terms = $('#termsView');
+  $('#termsOpen').addEventListener('click', e => { e.stopPropagation(); terms.hidden = false; });
+  $('#termsClose').addEventListener('click', () => { terms.hidden = true; });
+  $('.terms-backdrop', terms).addEventListener('click', () => { terms.hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !terms.hidden) terms.hidden = true; });
+  // Finish → pay (if anything due) or straight to confirmation
+  $('#finishBtn').addEventListener('click', () => {
+    const total = totalPrice();
+    if (total > 0) openPay(total); else finalizeCheckin(0);
+  });
+}
+
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
   state.arrTime = '13:00'; state.depTime = '13:00';        // honest pre-3 PM / post-11 AM times
   state.earlyCheckin = '13:00'; state.lateCheckout = '13:00';  // both paid upgrades added
+  state.canalView = 'yes'; state.damageWaiver = 'waiver';      // step-2 add-ons
   state.parking = 'yes'; state.plate = 'A 12345'; state.sofaBed = 'yes';
   state.guests.forEach((g) => {
     g.idPhoto = 'passport_demo.jpg';
@@ -1148,12 +1503,14 @@ $('#tAddGuest').addEventListener('click', () => {
   state.guests.push({ idPhoto: '', idPreview: '' });
   save(); renderGuests();
 });
+$('#tExtras').addEventListener('click', showExtrasView);
 $('#tReset').addEventListener('click', () => { localStorage.removeItem(LS_KEY); location.reload(); });
 
 /* ---- Init ---- */
 load();
 fillContactValues();
 wireContact();
+wireExtras();
 renderGuests();
 </script>
 </body>
