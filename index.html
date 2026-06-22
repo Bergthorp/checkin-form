@@ -43,6 +43,11 @@
   .req { color: var(--asterisk); margin-left: 2px; }
 
   section { margin-bottom: 40px; }
+  section.reveal { animation: revealSection .35s ease both; }
+  @keyframes revealSection {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
   .divider { border: none; border-top: 3px dotted var(--border); margin: 40px 0; }
 
   /* ---------- Fields ---------- */
@@ -302,7 +307,7 @@
       </section>
 
       <!-- Departure -->
-      <section>
+      <section id="depSection" hidden>
         <h2>What time will you leave? <span class="req">*</span></h2>
         <div class="note">Check-out is by 11:00 AM at the latest — spin the dial to the time you expect to leave.</div>
         <div class="timefield" id="depField">
@@ -501,6 +506,9 @@ function refreshTimeButtons() {
     if (v) { val.textContent = timeLabel(f.slots, v); val.classList.remove('placeholder'); wrap.classList.add('chosen'); }
     else   { val.textContent = 'Tap to choose'; val.classList.add('placeholder'); wrap.classList.remove('chosen'); }
   });
+  // Progressive disclosure: reveal departure only once arrival is chosen.
+  const dep = $('#depSection');
+  if (state.arrTime && dep.hidden) { dep.hidden = false; dep.classList.add('reveal'); }
 }
 function setupWheels() {
   const clamp = (f, idx) => Math.max(0, Math.min(f.slots.length - 1, idx));
