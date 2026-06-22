@@ -55,6 +55,33 @@
   .field { margin-bottom: 4px; }
   label.lbl { display: block; font-size: 14px; color: var(--label); margin-bottom: 8px; }
   .note { font-size: 14px; color: var(--text-soft); margin-top: -18px; margin-bottom: 16px; }
+  .counter {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 14px 18px; margin-bottom: 16px;
+  }
+  .counter-label { font-size: 16px; font-weight: 600; color: var(--teal); }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button {
+    width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--teal-line);
+    background: var(--mint); color: var(--teal); font-size: 22px; font-weight: 700;
+    line-height: 1; cursor: pointer; transition: background .15s, opacity .15s;
+  }
+  .stepper button:hover { background: var(--mint-hover); }
+  .stepper button:disabled { opacity: .35; cursor: not-allowed; }
+  .stepper #guestCount { min-width: 32px; text-align: center; font-size: 19px; font-weight: 700; color: var(--teal); }
+  .trust {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 13px; color: var(--text-soft); line-height: 1.5; margin-bottom: 8px;
+  }
+  .trust-ic { flex: none; }
+  .nudge {
+    display: flex; align-items: flex-start; gap: 10px; margin-top: 12px;
+    background: #fff6ec; border: 1.5px solid #f0c89a; border-radius: var(--radius);
+    padding: 12px 14px; font-size: 14px; color: #8a4b1f; line-height: 1.45;
+    animation: revealSection .3s ease both;
+  }
+  .nudge-ic { flex: none; font-size: 16px; }
 
   input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select {
     width: 100%; padding: 15px 16px;
@@ -324,6 +351,10 @@
           </div>
         </div>
         <div class="err" data-for="depTime">Please choose your departure time.</div>
+        <div class="nudge" id="depNudge" hidden>
+          <span class="nudge-ic" aria-hidden="true">⏰</span>
+          <span>Heads up — our cleaning team may arrive shortly after this time. If you’re not sure, choose a later slot so you’re not disturbed.</span>
+        </div>
       </section>
 
       <hr class="divider" />
@@ -332,6 +363,15 @@
       <section>
         <h2>Guest IDs <span class="req">*</span></h2>
         <div class="note">Upload a clear photo of each guest’s passport or ID — that’s all we need.</div>
+        <div class="counter">
+          <span class="counter-label">How many guests are staying?</span>
+          <div class="stepper">
+            <button type="button" id="guestMinus" aria-label="Remove a guest">−</button>
+            <span id="guestCount">2</span>
+            <button type="button" id="guestPlus" aria-label="Add a guest">+</button>
+          </div>
+        </div>
+        <div class="trust"><span class="trust-ic" aria-hidden="true">🔒</span>Your ID is only used to verify your check-in and is stored securely — we never share it.</div>
       </section>
       <div id="guests"></div>
 
@@ -509,7 +549,11 @@ function refreshTimeButtons() {
   // Progressive disclosure: reveal departure only once arrival is chosen.
   const dep = $('#depSection');
   if (state.arrTime && dep.hidden) { dep.hidden = false; dep.classList.add('reveal'); }
+  // Soft nudge if the guest picks an early departure (cleaners may arrive soon after).
+  const nudge = $('#depNudge');
+  if (nudge) nudge.hidden = !EARLY_DEP.includes(state.depTime);
 }
+const EARLY_DEP = ['early', '06:00', '07:00'];
 function setupWheels() {
   const clamp = (f, idx) => Math.max(0, Math.min(f.slots.length - 1, idx));
   TIME_FIELDS.forEach(f => {
@@ -650,7 +694,23 @@ function renderGuests() {
     if (i < state.guests.length - 1)
       guestsEl.appendChild(Object.assign(document.createElement('hr'), { className: 'divider' }));
   });
+  refreshGuestCount();
 }
+
+const MAX_GUESTS = 10;
+function refreshGuestCount() {
+  $('#guestCount').textContent = state.guests.length;
+  $('#guestMinus').disabled = state.guests.length <= 1;
+  $('#guestPlus').disabled = state.guests.length >= MAX_GUESTS;
+}
+function setGuestCount(n) {
+  n = Math.max(1, Math.min(MAX_GUESTS, n));
+  while (state.guests.length < n) state.guests.push({ idPhoto: '', idPreview: '' });
+  while (state.guests.length > n) state.guests.pop();
+  save(); renderGuests();
+}
+$('#guestMinus').addEventListener('click', () => setGuestCount(state.guests.length - 1));
+$('#guestPlus').addEventListener('click', () => setGuestCount(state.guests.length + 1));
 
 /* ---- Validation ---- */
 function showErr(id)  { const e = $(`.err[data-for="${id}"]`); if (e) e.classList.add('show'); }
