@@ -486,8 +486,8 @@ function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? 
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
 const WHEEL_ITEM = 48;
 const TIME_FIELDS = [
-  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal', confirm: 'arrConfirm' },
-  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal', confirm: 'depConfirm' }
+  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal', confirm: 'arrConfirm', def: '15:00' },
+  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal', confirm: 'depConfirm', def: '11:00' }
 ];
 function refreshTimeButtons() {
   TIME_FIELDS.forEach(f => {
@@ -515,6 +515,7 @@ function setupWheels() {
     const open = () => {
       wheel.hidden = false; btn.setAttribute('aria-expanded', true);
       let idx = f.slots.findIndex(s => s.v === state[f.key]);
+      if (idx < 0) idx = f.slots.findIndex(s => s.v === f.def);
       if (idx < 0) idx = 0;
       sc.scrollTop = idx * WHEEL_ITEM; setActive(idx);
       requestAnimationFrame(() => { sc.scrollTop = idx * WHEEL_ITEM; setActive(idx); });
