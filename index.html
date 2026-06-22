@@ -108,27 +108,46 @@
   .ccitem .dl { color: var(--text-soft); }
   .ccempty { padding: 14px 12px; color: var(--text-soft); font-size: 14px; }
 
-  /* ---------- Time chips ---------- */
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
-  .chip {
-    position: relative; border: 1.5px solid var(--border); background: #fff;
-    border-radius: var(--radius); padding: 12px 18px; cursor: pointer;
-    font-family: var(--font); font-size: 16px; font-weight: 700; color: var(--text);
-    display: inline-flex; flex-direction: column; align-items: center; gap: 4px; line-height: 1.1;
-    transition: transform .12s, background .15s, border-color .15s, box-shadow .15s, color .15s;
+  /* ---------- Time wheel picker ---------- */
+  .timefield { position: relative; max-width: 300px; }
+  .timebtn {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 16px 20px; cursor: pointer; font-family: var(--font);
+    font-size: 19px; font-weight: 700; color: var(--text);
+    transition: border-color .15s, box-shadow .15s, color .15s;
   }
-  .chip:hover { background: var(--mint); border-color: var(--mint-hover); }
-  .chip:active { transform: scale(.95); }
-  .chip.sel {
-    background: var(--teal); border-color: var(--teal); color: #fff;
-    box-shadow: 0 6px 16px rgba(14,79,74,.28); transform: translateY(-1px);
+  .timebtn:hover { border-color: var(--teal-line); }
+  .timefield.chosen .timebtn { border-color: var(--teal); color: var(--teal); }
+  .timefield.invalid .timebtn { border-color: var(--asterisk); }
+  .timeval.placeholder { color: var(--text-soft); font-weight: 600; }
+  .timebtn .tarrow { color: var(--text-soft); font-size: 11px; }
+
+  .wheel {
+    position: absolute; z-index: 50; top: calc(100% + 8px); left: 0; right: 0;
+    background: #fff; border: 1.5px solid var(--border); border-radius: 16px;
+    box-shadow: 0 18px 44px rgba(0,0,0,.18); overflow: hidden;
   }
-  .chip-tag {
-    font-size: 10px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
-    color: var(--teal); background: var(--mint); padding: 2px 8px; border-radius: 20px;
+  .wheel-scroll {
+    height: 240px; overflow-y: scroll; scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent);
   }
-  .chip.sel .chip-tag { color: var(--teal); background: #fff; }
-  .chips.invalid { box-shadow: 0 0 0 2px var(--asterisk); border-radius: var(--radius); padding: 8px; margin: -8px; }
+  .wheel-scroll::-webkit-scrollbar { display: none; }
+  .wheel-pad { height: 96px; flex: none; }
+  .wheel-item {
+    height: 48px; display: flex; align-items: center; justify-content: center;
+    scroll-snap-align: center; font-size: 17px; font-weight: 700; color: var(--text-soft);
+    cursor: pointer; transition: color .15s, transform .15s;
+  }
+  .wheel-item.active { color: var(--teal); transform: scale(1.18); }
+  .wheel-band {
+    position: absolute; left: 12px; right: 12px; top: 50%; height: 48px;
+    transform: translateY(-50%); border-radius: 10px;
+    background: rgba(108,192,180,.14); border: 1.5px solid var(--teal-line);
+    pointer-events: none;
+  }
 
   /* ---------- Accordion (guests + additional) ---------- */
   .guest-head {
@@ -252,16 +271,34 @@
       <!-- Arrival -->
       <section>
         <h2>What time will you arrive? <span class="req">*</span></h2>
-        <div class="note">Check-in opens at 3:00 PM — tap the time you expect to get here.</div>
-        <div class="chips" id="arrChips"></div>
+        <div class="note">Check-in opens at 3:00 PM — spin the dial to the time you expect to get here.</div>
+        <div class="timefield" id="arrField">
+          <button type="button" class="timebtn" id="arrBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="timeval placeholder" id="arrVal">Tap to choose</span>
+            <span class="tarrow">▾</span>
+          </button>
+          <div class="wheel" id="arrWheel" hidden>
+            <div class="wheel-scroll" id="arrScroll"></div>
+            <div class="wheel-band"></div>
+          </div>
+        </div>
         <div class="err" data-for="arrTime">Please choose your arrival time.</div>
       </section>
 
       <!-- Departure -->
       <section>
         <h2>What time will you leave? <span class="req">*</span></h2>
-        <div class="note">Check-out is by 11:00 AM at the latest — tap the time you expect to leave.</div>
-        <div class="chips" id="depChips"></div>
+        <div class="note">Check-out is by 11:00 AM at the latest — spin the dial to the time you expect to leave.</div>
+        <div class="timefield" id="depField">
+          <button type="button" class="timebtn" id="depBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="timeval placeholder" id="depVal">Tap to choose</span>
+            <span class="tarrow">▾</span>
+          </button>
+          <div class="wheel" id="depWheel" hidden>
+            <div class="wheel-scroll" id="depScroll"></div>
+            <div class="wheel-band"></div>
+          </div>
+        </div>
         <div class="err" data-for="depTime">Please choose your departure time.</div>
       </section>
 
@@ -433,13 +470,55 @@ const DEP_SLOTS = [
   { v: '11:00', t: '11:00 AM', tag: 'Latest' }
 ];
 function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
-function renderTimeChips(containerId, slots, key) {
-  $('#' + containerId).innerHTML = slots.map(s =>
-    `<button type="button" class="chip${state[key] === s.v ? ' sel' : ''}" data-key="${key}" data-val="${s.v}">`
-    + `<span class="chip-t">${s.t}</span>`
-    + (s.tag ? `<span class="chip-tag">${s.tag}</span>` : '')
-    + `</button>`
-  ).join('');
+
+/* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
+const WHEEL_ITEM = 48;
+const TIME_FIELDS = [
+  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal' },
+  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal' }
+];
+function refreshTimeButtons() {
+  TIME_FIELDS.forEach(f => {
+    const val = $('#' + f.val), wrap = $('#' + f.field), v = state[f.key];
+    if (v) { val.textContent = timeLabel(f.slots, v); val.classList.remove('placeholder'); wrap.classList.add('chosen'); }
+    else   { val.textContent = 'Tap to choose'; val.classList.add('placeholder'); wrap.classList.remove('chosen'); }
+  });
+}
+function setupWheels() {
+  TIME_FIELDS.forEach(f => {
+    const wrap = $('#' + f.field), btn = $('#' + f.btn), wheel = $('#' + f.wheel), sc = $('#' + f.scroll);
+    sc.innerHTML = '<div class="wheel-pad"></div>'
+      + f.slots.map((s, i) => `<div class="wheel-item" data-idx="${i}">${s.t}</div>`).join('')
+      + '<div class="wheel-pad"></div>';
+    const items = $$('.wheel-item', sc);
+    const setActive = idx => items.forEach((it, i) => it.classList.toggle('active', i === idx));
+    const commit = idx => {
+      const c = Math.max(0, Math.min(f.slots.length - 1, idx));
+      state[f.key] = f.slots[c].v; setActive(c); refreshTimeButtons();
+      wrap.classList.remove('invalid'); clearErr(f.key); save();
+    };
+    const open = () => {
+      wheel.hidden = false; btn.setAttribute('aria-expanded', true);
+      let idx = f.slots.findIndex(s => s.v === state[f.key]);
+      if (idx < 0) idx = 0;
+      requestAnimationFrame(() => { sc.scrollTop = idx * WHEEL_ITEM; setActive(idx); commit(idx); });
+    };
+    const close = () => { wheel.hidden = true; btn.setAttribute('aria-expanded', false); };
+    let raf, settle;
+    sc.addEventListener('scroll', () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setActive(Math.max(0, Math.min(f.slots.length - 1, Math.round(sc.scrollTop / WHEEL_ITEM)))));
+      clearTimeout(settle);
+      settle = setTimeout(() => commit(Math.round(sc.scrollTop / WHEEL_ITEM)), 110);
+    });
+    sc.addEventListener('click', e => {
+      const it = e.target.closest('.wheel-item'); if (!it) return;
+      sc.scrollTo({ top: +it.dataset.idx * WHEEL_ITEM, behavior: 'smooth' });
+    });
+    btn.addEventListener('click', () => wheel.hidden ? open() : close());
+    document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  });
 }
 
 /* ---- Contact: fill values (idempotent) ---- */
@@ -452,8 +531,7 @@ function fillContactValues() {
   $('#email').value = state.email;
   $('#phone').value = state.phone;
   applyCc();
-  renderTimeChips('arrChips', ARR_SLOTS, 'arrTime');
-  renderTimeChips('depChips', DEP_SLOTS, 'depTime');
+  refreshTimeButtons();
   $('#parking').value = state.parking;
   $('#sofabed').value = state.sofaBed;
 }
@@ -462,17 +540,7 @@ function fillContactValues() {
 function wireContact() {
   $('#email').addEventListener('input', e => { state.email = e.target.value; clearErr('email'); save(); });
   $('#phone').addEventListener('input', e => { state.phone = e.target.value; $('#phoneWrap').classList.remove('invalid'); clearErr('phone'); save(); });
-  $('#arrChips').addEventListener('click', onChipPick);
-  $('#depChips').addEventListener('click', onChipPick);
-  function onChipPick(e) {
-    const chip = e.target.closest('.chip'); if (!chip) return;
-    const key = chip.dataset.key, wrap = chip.parentElement;
-    state[key] = chip.dataset.val;
-    $$('.chip', wrap).forEach(b => b.classList.toggle('sel', b === chip));
-    wrap.classList.remove('invalid');
-    clearErr(key);
-    save();
-  }
+  setupWheels();
   $('#parking').addEventListener('input', e => { state.parking = e.target.value; save(); });
   $('#sofabed').addEventListener('input', e => { state.sofaBed = e.target.value; save(); });
 
@@ -572,8 +640,8 @@ function validate() {
     $('#phoneWrap').classList.add('invalid'); showErr('phone'); fail($('#phoneWrap'));
   }
   // arrival / departure time
-  if (!state.arrTime) { $('#arrChips').classList.add('invalid'); showErr('arrTime'); fail($('#arrChips')); }
-  if (!state.depTime) { $('#depChips').classList.add('invalid'); showErr('depTime'); fail($('#depChips')); }
+  if (!state.arrTime) { $('#arrField').classList.add('invalid'); showErr('arrTime'); fail($('#arrField')); }
+  if (!state.depTime) { $('#depField').classList.add('invalid'); showErr('depTime'); fail($('#depField')); }
   // guests — ID photo only
   $$('.guest').forEach((block, i) => {
     if (!state.guests[i].idPhoto) { $('.err[data-gerr="idPhoto"]', block).classList.add('show'); fail(block); }
