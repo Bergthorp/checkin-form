@@ -656,6 +656,7 @@ function addGuest() {
 }
 function removeGuest(i) {
   if (state.guests.length <= 1) return;
+  if (!confirm('Only guests who share an ID will be granted access by building security. Remove this guest?')) return;
   state.guests.splice(i, 1);
   save(); renderGuests();
 }
