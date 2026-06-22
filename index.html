@@ -272,13 +272,23 @@
   .done-card .k { color: var(--text-soft); }
   .done-card .v { font-weight: 700; color: var(--text); }
 
-  /* ---------- Paid time slots ---------- */
-  .wheel-tag.price { background: #fbe6d4; color: #b4521f; }
-  .timeprice {
-    margin-left: 8px; padding: 2px 9px; border-radius: 999px;
-    background: #fbe6d4; color: #b4521f; font-size: 13px; font-weight: 800;
-    vertical-align: middle;
+  /* ---------- Paid add-on selectors ---------- */
+  #earlyUpsell, #lateUpsell { margin-top: -16px; }
+  #lateUpsell[hidden] { display: none; }
+  .addon { background: #fff7ef; border: 1.5px solid #f1d9c2; border-radius: 14px; padding: 20px 22px; }
+  .addon-title { font-size: 17px; font-weight: 800; color: var(--text); }
+  .addon-sub { font-size: 13.5px; color: var(--text-soft); line-height: 1.5; margin: 4px 0 16px; }
+  .addon-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .addon-opt {
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 12px;
+    border: 1.5px solid var(--border); background: #fff; color: var(--text);
+    font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
   }
+  .addon-opt:hover { border-color: #e2a878; }
+  .addon-opt.active { background: #fbe6d4; border-color: #b4521f; color: #b4521f; }
+  .addon-opt[data-val=""].active { background: var(--mint); border-color: var(--teal); color: var(--teal); }
+  .addon-price { font-size: 13px; font-weight: 800; color: #b4521f; }
 
   /* ---------- Upgrade summary ---------- */
   #upsell { margin-top: 8px; }
@@ -419,6 +429,19 @@
         <div class="err" data-for="arrTime">Please choose your arrival time.</div>
       </section>
 
+      <!-- Early check-in upsell (optional, paid) -->
+      <section id="earlyUpsell">
+        <div class="addon">
+          <div class="addon-title">Want to get in earlier?</div>
+          <div class="addon-sub">Your room is guaranteed from 3:00 PM. Add early check-in to be sure it’s ready when you arrive.</div>
+          <div class="addon-opts" id="earlyOpts" role="group" aria-label="Early check-in">
+            <button type="button" class="addon-opt" data-val="">No, thanks</button>
+            <button type="button" class="addon-opt" data-val="14:00">From 2:00 PM <span class="addon-price">+$69</span></button>
+            <button type="button" class="addon-opt" data-val="13:00">From 1:00 PM <span class="addon-price">+$138</span></button>
+          </div>
+        </div>
+      </section>
+
       <!-- Departure -->
       <section id="depSection" hidden>
         <h2>What time do you expect to leave? <span class="req">*</span></h2>
@@ -436,6 +459,19 @@
           </div>
         </div>
         <div class="err" data-for="depTime">Please choose your departure time.</div>
+      </section>
+
+      <!-- Late check-out upsell (optional, paid) -->
+      <section id="lateUpsell" hidden>
+        <div class="addon">
+          <div class="addon-title">Need a few more hours?</div>
+          <div class="addon-sub">Standard check-out is 11:00 AM. Add late check-out to keep your room longer.</div>
+          <div class="addon-opts" id="lateOpts" role="group" aria-label="Late check-out">
+            <button type="button" class="addon-opt" data-val="">No, thanks</button>
+            <button type="button" class="addon-opt" data-val="12:00">Until 12:00 PM <span class="addon-price">+$69</span></button>
+            <button type="button" class="addon-opt" data-val="13:00">Until 1:00 PM <span class="addon-price">+$138</span></button>
+          </div>
+        </div>
       </section>
 
       <hr class="divider" />
@@ -614,6 +650,7 @@ function flagOf(iso) { return iso.toUpperCase().replace(/./g, c => String.fromCo
 const state = {
   email: '', iso: 'AE', cc: '+971', phone: '',
   arrTime: '', depTime: '',
+  earlyCheckin: '', lateCheckout: '',
   parking: '', plate: '', sofaBed: '',
   guests: [
     { idPhoto: '', idPreview: '' },
@@ -630,9 +667,7 @@ function load() {
 
 /* ---- Time chips (no default — guest must choose) ---- */
 const ARR_SLOTS = [
-  { v: '13:00', t: '1:00 PM', price: 138 },
-  { v: '14:00', t: '2:00 PM', price: 69 },
-  { v: '15:00', t: '3:00 PM', free: true },
+  { v: '15:00', t: '3:00 PM', tag: 'Standard check-in' },
   { v: '16:00', t: '4:00 PM' },
   { v: '17:00', t: '5:00 PM' },
   { v: '18:00', t: '6:00 PM' },
@@ -651,16 +686,16 @@ const DEP_SLOTS = [
   { v: '08:00', t: '8:00 AM' },
   { v: '09:00', t: '9:00 AM' },
   { v: '10:00', t: '10:00 AM' },
-  { v: '11:00', t: '11:00 AM', free: true },
-  { v: '12:00', t: '12:00 PM', price: 69 },
-  { v: '13:00', t: '1:00 PM',  price: 138 }
+  { v: '11:00', t: '11:00 AM', tag: 'Standard check-out' }
 ];
-const ARR_LABEL = 'Early check-in';
-const DEP_LABEL = 'Late check-out';
-function slotPrice(slots, v) { const s = slots.find(x => x.v === v); return s && s.price ? s.price : 0; }
-function fieldPrice(f) { return slotPrice(f.slots, state[f.key]); }
-function totalPrice() { return TIME_FIELDS.reduce((sum, f) => sum + fieldPrice(f), 0); }
 function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
+
+/* ---- Paid add-ons (separate, explicit opt-in — NOT the dials) ---- */
+const EARLY_OPTS = [ { v: '14:00', t: '2:00 PM', price: 69 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
+const LATE_OPTS  = [ { v: '12:00', t: '12:00 PM', price: 69 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
+function optPrice(opts, v) { const o = opts.find(x => x.v === v); return o ? o.price : 0; }
+function optLabel(opts, v) { const o = opts.find(x => x.v === v); return o ? o.t : ''; }
+function totalPrice() { return optPrice(EARLY_OPTS, state.earlyCheckin) + optPrice(LATE_OPTS, state.lateCheckout); }
 
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
 const WHEEL_ITEM = 48;
@@ -672,16 +707,22 @@ function refreshTimeButtons() {
   TIME_FIELDS.forEach(f => {
     const val = $('#' + f.val), wrap = $('#' + f.field), v = state[f.key];
     if (v) {
-      const p = slotPrice(f.slots, v);
-      val.innerHTML = timeLabel(f.slots, v) + (p ? ` <span class="timeprice">+$${p}</span>` : '');
+      val.textContent = timeLabel(f.slots, v);
       val.classList.remove('placeholder'); wrap.classList.add('chosen');
     } else {
       val.textContent = 'Tap to choose'; val.classList.add('placeholder'); wrap.classList.remove('chosen');
     }
   });
-  // Progressive disclosure: reveal departure only once arrival is chosen.
-  const dep = $('#depSection');
+  // Progressive disclosure: reveal departure + late-checkout offer once arrival is chosen.
+  const dep = $('#depSection'), late = $('#lateUpsell');
   if (state.arrTime && dep.hidden) { dep.hidden = false; dep.classList.add('reveal'); }
+  if (state.arrTime && late && late.hidden) { late.hidden = false; late.classList.add('reveal'); }
+}
+
+/* ---- Add-on option selectors (early check-in / late check-out) ---- */
+function renderAddons() {
+  $$('#earlyOpts .addon-opt').forEach(b => b.classList.toggle('active', b.dataset.val === state.earlyCheckin));
+  $$('#lateOpts .addon-opt').forEach(b => b.classList.toggle('active', b.dataset.val === state.lateCheckout));
   renderUpsell();
 }
 
@@ -690,13 +731,8 @@ function renderUpsell() {
   const box = $('#upsell'), list = $('#upsellList'), total = totalPrice();
   if (!box) return;
   const rows = [];
-  TIME_FIELDS.forEach(f => {
-    const p = fieldPrice(f);
-    if (p) {
-      const label = f.key === 'arrTime' ? ARR_LABEL : DEP_LABEL;
-      rows.push(`<div class="up-row"><span class="up-k">${label} · ${timeLabel(f.slots, state[f.key])}</span><span class="up-v">+$${p}</span></div>`);
-    }
-  });
+  if (state.earlyCheckin) rows.push(`<div class="up-row"><span class="up-k">Early check-in · ${optLabel(EARLY_OPTS, state.earlyCheckin)}</span><span class="up-v">+$${optPrice(EARLY_OPTS, state.earlyCheckin)}</span></div>`);
+  if (state.lateCheckout) rows.push(`<div class="up-row"><span class="up-k">Late check-out · ${optLabel(LATE_OPTS, state.lateCheckout)}</span><span class="up-v">+$${optPrice(LATE_OPTS, state.lateCheckout)}</span></div>`);
   if (total > 0) {
     list.innerHTML = rows.join('')
       + `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>`;
@@ -713,13 +749,7 @@ function setupWheels() {
     const wrap = $('#' + f.field), btn = $('#' + f.btn), wheel = $('#' + f.wheel),
           sc = $('#' + f.scroll), confirm = $('#' + f.confirm);
     sc.innerHTML = '<div class="wheel-pad"></div>'
-      + f.slots.map((s, i) => {
-          let pill = '';
-          if (s.price) pill = `<span class="wheel-tag price">+$${s.price}</span>`;
-          else if (s.free) pill = `<span class="wheel-tag">Standard · free</span>`;
-          else if (s.tag) pill = `<span class="wheel-tag">${s.tag}</span>`;
-          return `<div class="wheel-item" data-idx="${i}">${s.t}${pill}</div>`;
-        }).join('')
+      + f.slots.map((s, i) => `<div class="wheel-item" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`).join('')
       + '<div class="wheel-pad"></div>';
     const items = $$('.wheel-item', sc);
     let tentative = 0;
@@ -727,8 +757,7 @@ function setupWheels() {
     const setActive = idx => {
       tentative = clamp(f, idx);
       items.forEach((it, i) => it.classList.toggle('active', i === tentative));
-      const sl = f.slots[tentative];
-      confirm.textContent = 'Set ' + sl.t + (sl.price ? ' · +$' + sl.price : '');
+      confirm.textContent = 'Set ' + f.slots[tentative].t;
     };
     const open = () => {
       wheel.hidden = false; btn.setAttribute('aria-expanded', true);
@@ -766,6 +795,7 @@ function fillContactValues() {
   $('#phone').value = state.phone;
   applyCc();
   refreshTimeButtons();
+  renderAddons();
   $('#plate').value = state.plate;
   renderParking();
   renderSofabed();
@@ -783,6 +813,12 @@ function wireContact() {
   $('#email').addEventListener('input', e => { state.email = e.target.value; clearErr('email'); save(); });
   $('#phone').addEventListener('input', e => { state.phone = e.target.value; $('#phoneWrap').classList.remove('invalid'); clearErr('phone'); save(); });
   setupWheels();
+  $$('#earlyOpts .addon-opt').forEach(b => b.addEventListener('click', () => {
+    state.earlyCheckin = b.dataset.val; renderAddons(); save();
+  }));
+  $$('#lateOpts .addon-opt').forEach(b => b.addEventListener('click', () => {
+    state.lateCheckout = b.dataset.val; renderAddons(); save();
+  }));
   $$('#parkingToggle .yn-btn').forEach(b => b.addEventListener('click', () => {
     state.parking = state.parking === b.dataset.val ? '' : b.dataset.val;
     if (state.parking !== 'yes') state.plate = '';
@@ -929,10 +965,8 @@ function finalizeCheckin(paidAmount) {
 
 function openPay(total) {
   const items = [];
-  TIME_FIELDS.forEach(f => {
-    const p = fieldPrice(f);
-    if (p) items.push(`${f.key === 'arrTime' ? ARR_LABEL : DEP_LABEL} (${timeLabel(f.slots, state[f.key])}) — $${p}`);
-  });
+  if (state.earlyCheckin) items.push(`Early check-in (${optLabel(EARLY_OPTS, state.earlyCheckin)}) — $${optPrice(EARLY_OPTS, state.earlyCheckin)}`);
+  if (state.lateCheckout) items.push(`Late check-out (${optLabel(LATE_OPTS, state.lateCheckout)}) — $${optPrice(LATE_OPTS, state.lateCheckout)}`);
   $('#paySummary').innerHTML = items.join('<br>');
   $('#payAmount').textContent = '$' + total.toFixed(2);
   const btn = $('#payBtn');
@@ -969,7 +1003,8 @@ $('#payBtn').addEventListener('click', () => {
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
-  state.arrTime = '14:00'; state.depTime = '12:00';
+  state.arrTime = '15:00'; state.depTime = '11:00';
+  state.earlyCheckin = '14:00'; state.lateCheckout = '12:00';
   state.parking = 'yes'; state.plate = 'A 12345'; state.sofaBed = 'yes';
   state.guests.forEach((g) => {
     g.idPhoto = 'passport_demo.jpg';
