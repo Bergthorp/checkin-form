@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Online check-in</title>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — Hostaway-style. Tweak to restyle fast.
+     ============================================================ */
+  :root {
+    --teal:        #0e4f4a;   /* headings */
+    --teal-line:   #6cc0b4;   /* selected toggle / focus accent */
+    --mint:        #cdeee1;   /* button fill */
+    --mint-hover:  #b9e6d5;
+    --asterisk:    #e0633a;   /* required marker */
+    --bg:          #f4f5f5;
+    --surface:     #ffffff;
+    --text:        #2b2f33;
+    --text-soft:   #6b7378;
+    --label:       #6b7378;
+    --border:      #d7dbde;
+    --radius:      10px;
+    --font:        'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --maxw:        1180px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 60px 40px 120px;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; }
+
+  h1 { color: var(--teal); font-size: 40px; font-weight: 800; letter-spacing: -0.5px; }
+  .sub { color: var(--text); font-size: 16px; margin-top: 4px; margin-bottom: 44px; }
+
+  h2 { color: var(--teal); font-size: 22px; font-weight: 700; margin-bottom: 26px; }
+
+  .req { color: var(--asterisk); margin-left: 2px; }
+
+  /* ---------- Sections / dividers ---------- */
+  section { margin-bottom: 40px; }
+  .divider {
+    border: none; border-top: 3px dotted var(--border);
+    margin: 40px 0;
+  }
+
+  /* ---------- Fields ---------- */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 40px; }
+  .field { margin-bottom: 4px; }
+  label.lbl {
+    display: block; font-size: 14px; color: var(--label);
+    margin-bottom: 8px;
+  }
+  .note { font-size: 14px; color: var(--text-soft); margin-top: -18px; margin-bottom: 16px; }
+
+  input[type=text], input[type=email], input[type=tel], select {
+    width: 100%; padding: 15px 16px;
+    font-family: var(--font); font-size: 16px;
+    border: 1.5px solid var(--border); border-radius: var(--radius);
+    background: #fff; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input::placeholder { color: #9aa1a6; }
+  input:focus, select:focus {
+    outline: none; border-color: var(--teal-line);
+    box-shadow: 0 0 0 3px rgba(108,192,180,.25);
+  }
+
+  /* ---------- Phone with country flag ---------- */
+  .phone { display: flex; }
+  .phone .cc {
+    display: flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--border); border-right: none;
+    border-radius: var(--radius) 0 0 var(--radius);
+    padding: 0 10px; background: #fbfcfc; cursor: pointer;
+    position: relative;
+  }
+  .phone .cc select {
+    border: none; background: transparent; padding: 12px 4px 12px 26px;
+    font-size: 15px; width: auto; box-shadow: none; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .phone .cc .flag { position: absolute; left: 10px; font-size: 18px; pointer-events: none; }
+  .phone .cc::after { content: '▾'; color: var(--text-soft); font-size: 11px; margin-left: -6px; }
+  .phone input { border-radius: 0 var(--radius) var(--radius) 0; }
+  .phone input:focus { box-shadow: 0 0 0 3px rgba(108,192,180,.25); position: relative; z-index: 1; }
+
+  /* ---------- Time row (time field + AM/PM segmented + arrive-by) ---------- */
+  .timerow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .timerow .timebox {
+    width: 92px; padding: 13px 14px; text-align: center;
+    border: 1.5px solid var(--border); border-radius: var(--radius);
+    font-size: 16px; background: #fff;
+  }
+  .seg {
+    display: inline-flex; border: 1.5px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .seg button {
+    border: none; background: #fff; padding: 13px 22px;
+    font-family: var(--font); font-size: 15px; font-weight: 700; color: var(--text-soft);
+    cursor: pointer; transition: .15s;
+  }
+  .seg button.sel { color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal-line); border-radius: var(--radius); }
+  .arriveby { min-width: 280px; }
+  .arriveby select { color: var(--text-soft); }
+
+  /* ---------- Guest accordion ---------- */
+  .guest { }
+  .guest-head {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+  }
+  .guest-head h2 { margin-bottom: 0; }
+  .chev { color: var(--teal); font-size: 20px; transition: transform .2s; }
+  .guest.collapsed .chev { transform: rotate(180deg); }
+  .guest-body { margin-top: 26px; overflow: hidden; }
+  .guest.collapsed .guest-body { display: none; }
+
+  /* ---------- Upload button ---------- */
+  .uplabel { display: block; font-size: 14px; color: var(--label); margin-bottom: 10px; }
+  .upbtn {
+    display: inline-block; background: var(--mint); color: var(--teal);
+    font-weight: 700; font-size: 15px; padding: 13px 26px;
+    border-radius: 99px; border: none; cursor: pointer; transition: .15s;
+  }
+  .upbtn:hover { background: var(--mint-hover); }
+  .upbtn input { display: none; }
+  .upname { font-size: 14px; color: var(--teal); margin-top: 10px; font-weight: 600; display: none; }
+
+  /* ---------- Submit ---------- */
+  .submitwrap { margin-top: 50px; }
+  .submit {
+    background: var(--teal); color: #fff; border: none;
+    padding: 16px 44px; border-radius: 99px; font-size: 16px; font-weight: 700;
+    font-family: var(--font); cursor: pointer; transition: .15s;
+  }
+  .submit:hover { background: #0a3d39; }
+
+  /* ---------- Test toolbar (dev only — delete for prod) ---------- */
+  .testbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1a2233; color: #cdd5e3; font-size: 12.5px;
+    padding: 10px 16px; display: flex; gap: 10px; align-items: center;
+    justify-content: center; flex-wrap: wrap; z-index: 50;
+  }
+  .testbar button {
+    background: #2c3852; color: #fff; border: none; border-radius: 8px;
+    padding: 6px 12px; font-size: 12.5px; cursor: pointer; font-family: var(--font);
+  }
+  .testbar button:hover { background: var(--teal-line); color: #04201c; }
+  .testbar .tag { background: var(--mint); color: var(--teal); font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+
+  @media (max-width: 760px) {
+    body { padding: 32px 18px 110px; }
+    h1 { font-size: 30px; }
+    .grid-2 { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Online check-in</h1>
+    <div class="sub">Please fill in the form below</div>
+
+    <!-- ===== Contact details ===== -->
+    <section>
+      <h2>Contact details</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label class="lbl">Email <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="Email" />
+        </div>
+        <div class="field">
+          <label class="lbl">Mobile phone number <span class="req">*</span></label>
+          <div class="phone">
+            <div class="cc">
+              <span class="flag" id="ccFlag">🇺🇸</span>
+              <select id="ccSelect">
+                <option data-flag="🇺🇸" value="+1">+1</option>
+                <option data-flag="🇮🇸" value="+354">+354</option>
+                <option data-flag="🇬🇧" value="+44">+44</option>
+                <option data-flag="🇦🇪" value="+971">+971</option>
+                <option data-flag="🇩🇪" value="+49">+49</option>
+                <option data-flag="🇫🇷" value="+33">+33</option>
+                <option data-flag="🇪🇸" value="+34">+34</option>
+              </select>
+            </div>
+            <input type="tel" id="phone" placeholder="+1" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Arrival time ===== -->
+    <section>
+      <h2>Estimated arrival time <span class="req">*</span></h2>
+      <div class="note">Check-in is available starting 3 PM</div>
+      <div class="timerow">
+        <input type="text" class="timebox" id="arrTime" value="03:00" />
+        <div class="seg" data-seg="arr">
+          <button type="button" data-ampm="AM">AM</button>
+          <button type="button" class="sel" data-ampm="PM">PM</button>
+        </div>
+        <div class="arriveby">
+          <select id="arriveBy">
+            <option value="">I arrive by</option>
+            <option>Car</option>
+            <option>Plane</option>
+            <option>Train</option>
+            <option>Bus</option>
+            <option>Taxi</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Departure time ===== -->
+    <section>
+      <h2>Estimated departure time <span class="req">*</span></h2>
+      <div class="note">Check-out is available until 11 AM</div>
+      <div class="timerow">
+        <input type="text" class="timebox" id="depTime" value="11:00" />
+        <div class="seg" data-seg="dep">
+          <button type="button" class="sel" data-ampm="AM">AM</button>
+          <button type="button" data-ampm="PM">PM</button>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- ===== Guests ===== -->
+    <div id="guests"></div>
+
+    <div class="submitwrap">
+      <button class="submit" id="submitBtn">Submit check-in</button>
+    </div>
+  </div>
+
+  <!-- Dev test toolbar — delete for production -->
+  <div class="testbar">
+    <span class="tag">TEST</span>
+    <button id="tFill">Autofill</button>
+    <button id="tAddGuest">+ Guest</button>
+    <button id="tReset">Reset</button>
+    <span id="tState" style="opacity:.7"></span>
+  </div>
+
+<script>
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+const state = { arrAmpm: 'PM', depAmpm: 'AM', cc: '+1' };
+
+/* ---- AM/PM segmented toggles ---- */
+$$('.seg').forEach(seg => {
+  const key = seg.dataset.seg === 'arr' ? 'arrAmpm' : 'depAmpm';
+  $$('button', seg).forEach(b => b.addEventListener('click', () => {
+    $$('button', seg).forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    state[key] = b.dataset.ampm;
+  }));
+});
+
+/* ---- Country code flag sync ---- */
+const ccSelect = $('#ccSelect');
+ccSelect.addEventListener('change', () => {
+  const opt = ccSelect.selectedOptions[0];
+  $('#ccFlag').textContent = opt.dataset.flag;
+  state.cc = opt.value;
+  $('#phone').placeholder = opt.value;
+});
+
+/* ---- Guests (lead = pre-filled name from booking) ---- */
+const guestNames = ['Ahmed Abdul Karim', 'Guest 2'];
+const guestsEl = $('#guests');
+
+function renderGuests() {
+  guestsEl.innerHTML = '';
+  guestNames.forEach((name, i) => {
+    const g = document.createElement('div');
+    g.className = 'guest';
+    g.innerHTML = `
+      <div class="guest-head">
+        <h2>${name}</h2>
+        <span class="chev">⌃</span>
+      </div>
+      <div class="guest-body">
+        <label class="uplabel">ID photo</label>
+        <label class="upbtn">Upload file
+          <input type="file" accept="image/*" data-idx="${i}" />
+        </label>
+        <div class="upname"></div>
+      </div>`;
+    // accordion toggle
+    $('.guest-head', g).addEventListener('click', () => g.classList.toggle('collapsed'));
+    // file name display
+    $('input[type=file]', g).addEventListener('change', e => {
+      const f = e.target.files[0]; if (!f) return;
+      const nm = $('.upname', g);
+      nm.textContent = '✓ ' + f.name; nm.style.display = 'block';
+    });
+    guestsEl.appendChild(g);
+    if (i < guestNames.length - 1) guestsEl.appendChild(Object.assign(document.createElement('hr'), { className: 'divider' }));
+  });
+}
+renderGuests();
+
+/* ---- Submit ---- */
+$('#submitBtn').addEventListener('click', () => {
+  const payload = {
+    email: $('#email').value,
+    phone: state.cc + ' ' + $('#phone').value,
+    arrival: $('#arrTime').value + ' ' + state.arrAmpm,
+    departure: $('#depTime').value + ' ' + state.depAmpm,
+    arriveBy: $('#arriveBy').value,
+    guests: guestNames
+  };
+  console.log('CHECK-IN SUBMITTED →', payload);
+  $('#tState').textContent = 'submitted ✓ (see console)';
+  alert('Check-in submitted!\n\n' + JSON.stringify(payload, null, 2));
+});
+
+/* ===== TEST TOOLBAR (delete for prod) ===== */
+$('#tFill').addEventListener('click', () => {
+  $('#email').value = 'ahmed.karim@email.com';
+  ccSelect.value = '+354'; ccSelect.dispatchEvent(new Event('change'));
+  $('#phone').value = '555 1234';
+  $('#arriveBy').value = 'Plane';
+  $$('.guest input[type=file]').forEach(() => {});
+  $$('.guest .upname').forEach(n => { n.textContent = '✓ passport_demo.jpg'; n.style.display = 'block'; });
+  $('#tState').textContent = 'autofilled ✓';
+});
+$('#tAddGuest').addEventListener('click', () => {
+  guestNames.push('Guest ' + (guestNames.length + 1));
+  renderGuests();
+});
+$('#tReset').addEventListener('click', () => location.reload());
+</script>
+</body>
+</html>
