@@ -81,13 +81,6 @@
     animation: revealSection .3s ease both;
   }
   .nudge-ic { flex: none; font-size: 16px; }
-  .affirm {
-    display: flex; align-items: flex-start; gap: 10px; margin-top: 12px;
-    background: var(--mint); border: 1.5px solid var(--teal-line); border-radius: var(--radius);
-    padding: 12px 14px; font-size: 14px; color: var(--teal); line-height: 1.45;
-    animation: revealSection .3s ease both;
-  }
-  .affirm-ic { flex: none; font-size: 16px; }
 
   input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select {
     width: 100%; padding: 15px 16px;
@@ -326,10 +319,6 @@
           </div>
         </div>
         <div class="err" data-for="arrTime">Please choose your arrival time.</div>
-        <div class="affirm" id="arrAffirm" hidden>
-          <span class="affirm-ic" aria-hidden="true">✨</span>
-          <span>Perfect — letting us know gives us extra time to have everything spotless and ready for you.</span>
-        </div>
       </section>
 
       <!-- Departure -->
@@ -501,14 +490,14 @@ const ARR_SLOTS = [
   { v: '15:00', t: '3:00 PM', tag: 'Earliest check-in' },
   { v: '16:00', t: '4:00 PM' },
   { v: '17:00', t: '5:00 PM' },
-  { v: '18:00', t: '6:00 PM' },
-  { v: '19:00', t: '7:00 PM' },
-  { v: '20:00', t: '8:00 PM' },
-  { v: '21:00', t: '9:00 PM' },
-  { v: '22:00', t: '10:00 PM' },
-  { v: '23:00', t: '11:00 PM' },
-  { v: '00:00', t: '12:00 AM' },
-  { v: 'late',  t: 'After midnight' }
+  { v: '18:00', t: '6:00 PM', tag: 'More prep time' },
+  { v: '19:00', t: '7:00 PM', tag: 'More prep time' },
+  { v: '20:00', t: '8:00 PM', tag: 'More prep time' },
+  { v: '21:00', t: '9:00 PM', tag: 'More prep time' },
+  { v: '22:00', t: '10:00 PM', tag: 'More prep time' },
+  { v: '23:00', t: '11:00 PM', tag: 'More prep time' },
+  { v: '00:00', t: '12:00 AM', tag: 'More prep time' },
+  { v: 'late',  t: 'After midnight', tag: 'More prep time' }
 ];
 const DEP_SLOTS = [
   { v: 'early', t: 'Before 6 AM' },
@@ -539,12 +528,8 @@ function refreshTimeButtons() {
   // Soft nudge if the guest picks an early departure (cleaners may arrive soon after).
   const nudge = $('#depNudge');
   if (nudge) nudge.hidden = !EARLY_DEP.includes(state.depTime);
-  // Warm affirmation for a late arrival (6 PM or later) — more turnaround buffer for us.
-  const affirm = $('#arrAffirm');
-  if (affirm) affirm.hidden = !LATE_ARR.includes(state.arrTime);
 }
 const EARLY_DEP = ['early', '06:00', '07:00'];
-const LATE_ARR = ['18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '00:00', 'late'];
 function setupWheels() {
   const clamp = (f, idx) => Math.max(0, Math.min(f.slots.length - 1, idx));
   TIME_FIELDS.forEach(f => {
