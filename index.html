@@ -108,23 +108,27 @@
   .ccitem .dl { color: var(--text-soft); }
   .ccempty { padding: 14px 12px; color: var(--text-soft); font-size: 14px; }
 
-  /* ---------- Time row ---------- */
-  .timerow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .timerow .timebox {
-    width: auto; min-width: 104px; padding: 13px 30px 13px 14px; text-align: left;
-    -webkit-appearance: none; appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b7378' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 12px center;
+  /* ---------- Time chips ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    position: relative; border: 1.5px solid var(--border); background: #fff;
+    border-radius: var(--radius); padding: 12px 18px; cursor: pointer;
+    font-family: var(--font); font-size: 16px; font-weight: 700; color: var(--text);
+    display: inline-flex; flex-direction: column; align-items: center; gap: 4px; line-height: 1.1;
+    transition: transform .12s, background .15s, border-color .15s, box-shadow .15s, color .15s;
   }
-  .seg { display: inline-flex; border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .seg button {
-    border: none; background: #fff; padding: 13px 22px;
-    font-family: var(--font); font-size: 15px; font-weight: 700; color: var(--text-soft);
-    cursor: pointer; transition: .15s;
+  .chip:hover { background: var(--mint); border-color: var(--mint-hover); }
+  .chip:active { transform: scale(.95); }
+  .chip.sel {
+    background: var(--teal); border-color: var(--teal); color: #fff;
+    box-shadow: 0 6px 16px rgba(14,79,74,.28); transform: translateY(-1px);
   }
-  .seg button.sel { color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal-line); border-radius: var(--radius); }
-  .arriveby { min-width: 280px; }
-  .arriveby select { color: var(--text-soft); }
+  .chip-tag {
+    font-size: 10px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+    color: var(--teal); background: var(--mint); padding: 2px 8px; border-radius: 20px;
+  }
+  .chip.sel .chip-tag { color: var(--teal); background: #fff; }
+  .chips.invalid { box-shadow: 0 0 0 2px var(--asterisk); border-radius: var(--radius); padding: 8px; margin: -8px; }
 
   /* ---------- Accordion (guests + additional) ---------- */
   .guest-head {
@@ -244,28 +248,18 @@
 
       <!-- Arrival -->
       <section>
-        <h2>Estimated arrival time <span class="req">*</span></h2>
-        <div class="note">Check-in is available starting 3 PM</div>
-        <div class="timerow">
-          <select class="timebox" id="arrTime"></select>
-          <div class="seg" data-seg="arr">
-            <button type="button" data-ampm="AM" aria-pressed="false">AM</button>
-            <button type="button" data-ampm="PM" class="sel" aria-pressed="true">PM</button>
-          </div>
-        </div>
+        <h2>What time will you arrive? <span class="req">*</span></h2>
+        <div class="note">Check-in opens at 3:00 PM — tap the time you expect to get here.</div>
+        <div class="chips" id="arrChips"></div>
+        <div class="err" data-for="arrTime">Please choose your arrival time.</div>
       </section>
 
       <!-- Departure -->
       <section>
-        <h2>Estimated departure time <span class="req">*</span></h2>
-        <div class="note">Check-out is available until 11 AM</div>
-        <div class="timerow">
-          <select class="timebox" id="depTime"></select>
-          <div class="seg" data-seg="dep">
-            <button type="button" data-ampm="AM" class="sel" aria-pressed="true">AM</button>
-            <button type="button" data-ampm="PM" aria-pressed="false">PM</button>
-          </div>
-        </div>
+        <h2>What time will you leave? <span class="req">*</span></h2>
+        <div class="note">Check-out is by 11:00 AM at the latest — tap the time you expect to leave.</div>
+        <div class="chips" id="depChips"></div>
+        <div class="err" data-for="depTime">Please choose your departure time.</div>
       </section>
 
       <hr class="divider" />
@@ -326,7 +320,7 @@
 <script>
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-const LS_KEY = 'checkin-draft-v2';
+const LS_KEY = 'checkin-draft-v3';
 
 /* ---- Country dial codes ---- */
 const COUNTRIES = [
@@ -393,8 +387,7 @@ function flagOf(iso) { return iso.toUpperCase().replace(/./g, c => String.fromCo
 /* ---- State ---- */
 const state = {
   email: '', iso: 'US', cc: '+1', phone: '',
-  arrTime: '03:00', arrAmpm: 'PM',
-  depTime: '11:00', depAmpm: 'AM',
+  arrTime: '', depTime: '',
   parking: '', sofaBed: '',
   guests: [
     { fullName: 'Ahmed Abdul Karim', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' },
@@ -412,15 +405,37 @@ function load() {
   } catch (e) {}
 }
 
-/* ---- Time options (12h, 30-min steps) ---- */
-function buildTimeOptions(sel, selected) {
-  const order = [12,1,2,3,4,5,6,7,8,9,10,11];
-  let html = '';
-  order.forEach(h => ['00','30'].forEach(m => {
-    const v = String(h).padStart(2,'0') + ':' + m;
-    html += `<option value="${v}"${v===selected?' selected':''}>${v}</option>`;
-  }));
-  sel.innerHTML = html;
+/* ---- Time chips (no default — guest must choose) ---- */
+const ARR_SLOTS = [
+  { v: '15:00', t: '3:00 PM', tag: 'Earliest' },
+  { v: '16:00', t: '4:00 PM' },
+  { v: '17:00', t: '5:00 PM' },
+  { v: '18:00', t: '6:00 PM' },
+  { v: '19:00', t: '7:00 PM' },
+  { v: '20:00', t: '8:00 PM' },
+  { v: '21:00', t: '9:00 PM' },
+  { v: '22:00', t: '10:00 PM' },
+  { v: '23:00', t: '11:00 PM' },
+  { v: '00:00', t: '12:00 AM' },
+  { v: 'late',  t: 'After midnight' }
+];
+const DEP_SLOTS = [
+  { v: 'early', t: 'Before 6 AM' },
+  { v: '06:00', t: '6:00 AM' },
+  { v: '07:00', t: '7:00 AM' },
+  { v: '08:00', t: '8:00 AM' },
+  { v: '09:00', t: '9:00 AM' },
+  { v: '10:00', t: '10:00 AM' },
+  { v: '11:00', t: '11:00 AM', tag: 'Latest' }
+];
+function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
+function renderTimeChips(containerId, slots, key) {
+  $('#' + containerId).innerHTML = slots.map(s =>
+    `<button type="button" class="chip${state[key] === s.v ? ' sel' : ''}" data-key="${key}" data-val="${s.v}">`
+    + `<span class="chip-t">${s.t}</span>`
+    + (s.tag ? `<span class="chip-tag">${s.tag}</span>` : '')
+    + `</button>`
+  ).join('');
 }
 
 /* ---- Contact: fill values (idempotent) ---- */
@@ -433,19 +448,27 @@ function fillContactValues() {
   $('#email').value = state.email;
   $('#phone').value = state.phone;
   applyCc();
-  buildTimeOptions($('#arrTime'), state.arrTime);
-  buildTimeOptions($('#depTime'), state.depTime);
+  renderTimeChips('arrChips', ARR_SLOTS, 'arrTime');
+  renderTimeChips('depChips', DEP_SLOTS, 'depTime');
   $('#parking').value = state.parking;
   $('#sofabed').value = state.sofaBed;
-  reflectAmpm();
 }
 
 /* ---- Contact: bind once ---- */
 function wireContact() {
   $('#email').addEventListener('input', e => { state.email = e.target.value; clearErr('email'); save(); });
   $('#phone').addEventListener('input', e => { state.phone = e.target.value; $('#phoneWrap').classList.remove('invalid'); clearErr('phone'); save(); });
-  $('#arrTime').addEventListener('change', e => { state.arrTime = e.target.value; save(); });
-  $('#depTime').addEventListener('change', e => { state.depTime = e.target.value; save(); });
+  $('#arrChips').addEventListener('click', onChipPick);
+  $('#depChips').addEventListener('click', onChipPick);
+  function onChipPick(e) {
+    const chip = e.target.closest('.chip'); if (!chip) return;
+    const key = chip.dataset.key, wrap = chip.parentElement;
+    state[key] = chip.dataset.val;
+    $$('.chip', wrap).forEach(b => b.classList.toggle('sel', b === chip));
+    wrap.classList.remove('invalid');
+    clearErr(key);
+    save();
+  }
   $('#parking').addEventListener('input', e => { state.parking = e.target.value; save(); });
   $('#sofabed').addEventListener('input', e => { state.sofaBed = e.target.value; save(); });
 
@@ -470,24 +493,6 @@ function wireContact() {
   document.addEventListener('click', e => { if (!$('#phoneWrap').contains(e.target)) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 }
-
-/* ---- AM/PM segmented toggles ---- */
-function reflectAmpm() {
-  $$('.seg').forEach(seg => {
-    const key = seg.dataset.seg === 'arr' ? 'arrAmpm' : 'depAmpm';
-    $$('button', seg).forEach(b => {
-      const on = b.dataset.ampm === state[key];
-      b.classList.toggle('sel', on);
-      b.setAttribute('aria-pressed', on);
-    });
-  });
-}
-$$('.seg').forEach(seg => {
-  const key = seg.dataset.seg === 'arr' ? 'arrAmpm' : 'depAmpm';
-  $$('button', seg).forEach(b => b.addEventListener('click', () => {
-    state[key] = b.dataset.ampm; reflectAmpm(); save();
-  }));
-});
 
 /* ---- Accordion helper (keyboard accessible) ---- */
 function wireAccordion(headEl) {
@@ -614,6 +619,9 @@ function validate() {
   if (state.phone.trim().length < 4) {
     $('#phoneWrap').classList.add('invalid'); showErr('phone'); fail($('#phoneWrap'));
   }
+  // arrival / departure time
+  if (!state.arrTime) { $('#arrChips').classList.add('invalid'); showErr('arrTime'); fail($('#arrChips')); }
+  if (!state.depTime) { $('#depChips').classList.add('invalid'); showErr('depTime'); fail($('#depChips')); }
   // guests
   $$('.guest').forEach((block, i) => {
     const g = state.guests[i];
@@ -640,8 +648,8 @@ $('#submitBtn').addEventListener('click', () => {
   // confirmation
   $('#doneName').textContent = guestTitle(0);
   $('#doneGuests').textContent = state.guests.length;
-  $('#doneArr').textContent = state.arrTime + ' ' + state.arrAmpm;
-  $('#doneDep').textContent = state.depTime + ' ' + state.depAmpm;
+  $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
+  $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
   $('#formView').style.display = 'none';
   $('#doneView').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -654,6 +662,7 @@ wireAccordion($('#addInfo .guest-head'));
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
+  state.arrTime = '18:00'; state.depTime = '10:00';
   state.parking = 'A 12345'; state.sofaBed = 'Yes please';
   state.guests.forEach((g, i) => {
     if (!g.fullName) g.fullName = 'Guest ' + (i + 1) + ' Name';
