@@ -226,12 +226,24 @@
   .qlabel { display: block; font-size: 16px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
   .qhint { font-size: 13px; color: var(--text-soft); line-height: 1.5; margin: -8px 0 12px; }
   .q + .q { margin-top: 30px; }
+  .optional { font-size: 14px; font-weight: 500; color: var(--text-soft); }
+
+  /* ---------- Yes/No toggle ---------- */
+  .yn { display: inline-flex; gap: 10px; }
+  .yn-btn {
+    min-width: 96px; padding: 13px 24px; border-radius: 99px;
+    border: 1.5px solid var(--border); background: #fff; color: var(--text);
+    font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .yn-btn:hover { border-color: var(--teal-line); }
+  .yn-btn.active { background: var(--mint); border-color: var(--teal); color: var(--teal); }
 
   /* ---------- Submit ---------- */
   .submitwrap { margin-top: 50px; }
   .submit {
-    background: var(--teal); color: #fff; border: none;
-    padding: 16px 44px; border-radius: 99px; font-size: 16px; font-weight: 700;
+    width: 100%; background: var(--teal); color: #fff; border: none;
+    padding: 17px 44px; border-radius: 99px; font-size: 16px; font-weight: 700;
     font-family: var(--font); cursor: pointer; transition: .15s;
   }
   .submit:hover { background: #0a3d39; }
@@ -300,8 +312,8 @@
             <label class="lbl">Mobile phone number <span class="req">*</span></label>
             <div class="phone" id="phoneWrap">
               <button type="button" class="cc" id="ccBtn" aria-haspopup="listbox" aria-expanded="false">
-                <span class="flag" id="ccFlag">🇺🇸</span>
-                <span class="ccdial" id="ccDial">+1</span>
+                <span class="flag" id="ccFlag">🇦🇪</span>
+                <span class="ccdial" id="ccDial">+971</span>
                 <span class="ccarrow">▾</span>
               </button>
               <input type="tel" id="phone" placeholder="+1" />
@@ -369,13 +381,16 @@
       <!-- Additional info -->
       <section id="addInfo">
         <div class="q">
-          <h2>Do you need parking?</h2>
+          <h2>Do you need parking? <span class="optional">(optional)</span></h2>
           <div class="qhint">Enter your vehicle plate (code + number) for garage access — or type “Later” and send it before you arrive.</div>
           <input type="text" id="parking" placeholder="Plate number, “Later”, or “No parking”" />
         </div>
         <div class="q">
-          <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
-          <input type="text" id="sofabed" placeholder="Your answer here" />
+          <label class="qlabel">Would you like the sofa bed prepared for sleeping? <span class="optional">(optional)</span></label>
+          <div class="yn" id="sofabedToggle" role="group" aria-label="Sofa bed">
+            <button type="button" class="yn-btn" data-val="yes">Yes</button>
+            <button type="button" class="yn-btn" data-val="no">No</button>
+          </div>
         </div>
       </section>
 
@@ -477,7 +492,7 @@ function flagOf(iso) { return iso.toUpperCase().replace(/./g, c => String.fromCo
 
 /* ---- State ---- */
 const state = {
-  email: '', iso: 'US', cc: '+1', phone: '',
+  email: '', iso: 'AE', cc: '+971', phone: '',
   arrTime: '', depTime: '',
   parking: '', sofaBed: '',
   guests: [
@@ -587,7 +602,10 @@ function fillContactValues() {
   applyCc();
   refreshTimeButtons();
   $('#parking').value = state.parking;
-  $('#sofabed').value = state.sofaBed;
+  renderSofabed();
+}
+function renderSofabed() {
+  $$('#sofabedToggle .yn-btn').forEach(b => b.classList.toggle('active', b.dataset.val === state.sofaBed));
 }
 
 /* ---- Contact: bind once ---- */
@@ -596,7 +614,10 @@ function wireContact() {
   $('#phone').addEventListener('input', e => { state.phone = e.target.value; $('#phoneWrap').classList.remove('invalid'); clearErr('phone'); save(); });
   setupWheels();
   $('#parking').addEventListener('input', e => { state.parking = e.target.value; save(); });
-  $('#sofabed').addEventListener('input', e => { state.sofaBed = e.target.value; save(); });
+  $$('#sofabedToggle .yn-btn').forEach(b => b.addEventListener('click', () => {
+    state.sofaBed = state.sofaBed === b.dataset.val ? '' : b.dataset.val;
+    renderSofabed(); save();
+  }));
 
   // country-code searchable dropdown
   const btn = $('#ccBtn'), panel = $('#ccPanel'), search = $('#ccSearch'), list = $('#ccList');
@@ -737,7 +758,7 @@ $('#submitBtn').addEventListener('click', () => {
 $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
   state.arrTime = '18:00'; state.depTime = '10:00';
-  state.parking = 'A 12345'; state.sofaBed = 'Yes please';
+  state.parking = 'A 12345'; state.sofaBed = 'yes';
   state.guests.forEach((g) => {
     g.idPhoto = 'passport_demo.jpg';
     g.idPreview = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23cdeee1"/><text x="32" y="38" font-size="10" text-anchor="middle" fill="%230e4f4a">ID</text></svg>');
