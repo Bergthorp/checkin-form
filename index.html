@@ -232,6 +232,7 @@
 
   /* ---------- Question prompts ---------- */
   .qlabel { display: block; font-size: 16px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
+  .qhint { font-size: 13px; color: var(--text-soft); line-height: 1.5; margin: -8px 0 12px; }
   .q + .q { margin-top: 30px; }
 
   /* ---------- Submit ---------- */
@@ -388,8 +389,9 @@
         </div>
         <div class="guest-body">
           <div class="q">
-            <label class="qlabel">Need parking? Please enter your full vehicle plate details (code + number) for garage access. Don’t have them yet? Type “Later” and send them before arrival. No parking? Type “No parking.”</label>
-            <input type="text" id="parking" placeholder="Your answer here" />
+            <label class="qlabel">Do you need parking?</label>
+            <div class="qhint">Enter your vehicle plate (code + number) for garage access — or type “Later” and send it before you arrive.</div>
+            <input type="text" id="parking" placeholder="Plate number, “Later”, or “No parking”" />
           </div>
           <div class="q">
             <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
