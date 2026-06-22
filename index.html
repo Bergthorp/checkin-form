@@ -200,17 +200,6 @@
     pointer-events: none;
   }
 
-  /* ---------- Accordion (guests + additional) ---------- */
-  .guest-head {
-    display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; user-select: none; border-radius: var(--radius);
-  }
-  .guest-head:focus-visible { outline: 2px solid var(--teal-line); outline-offset: 4px; }
-  .guest-head h2 { margin-bottom: 0; }
-  .chev { color: var(--teal); font-size: 20px; transition: transform .2s; }
-  .collapsed .chev { transform: rotate(180deg); }
-  .guest-body { margin-top: 26px; }
-  .collapsed .guest-body { display: none; }
   .guest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 40px; margin-bottom: 24px; }
 
   /* ---------- Guest ID blocks ---------- */
@@ -294,7 +283,6 @@
 
       <!-- Contact details -->
       <section>
-        <h2>Contact details</h2>
         <div class="grid-2">
           <div class="field">
             <label class="lbl">Email <span class="req">*</span></label>
@@ -382,23 +370,17 @@
       <hr class="divider" />
 
       <!-- Additional info -->
-      <div id="addInfo">
-        <div class="guest-head" role="button" tabindex="0" aria-expanded="true">
-          <h2>Additional info</h2>
-          <span class="chev">⌃</span>
+      <section id="addInfo">
+        <div class="q">
+          <h2>Do you need parking?</h2>
+          <div class="qhint">Enter your vehicle plate (code + number) for garage access — or type “Later” and send it before you arrive.</div>
+          <input type="text" id="parking" placeholder="Plate number, “Later”, or “No parking”" />
         </div>
-        <div class="guest-body">
-          <div class="q">
-            <label class="qlabel">Do you need parking?</label>
-            <div class="qhint">Enter your vehicle plate (code + number) for garage access — or type “Later” and send it before you arrive.</div>
-            <input type="text" id="parking" placeholder="Plate number, “Later”, or “No parking”" />
-          </div>
-          <div class="q">
-            <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
-            <input type="text" id="sofabed" placeholder="Your answer here" />
-          </div>
+        <div class="q">
+          <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
+          <input type="text" id="sofabed" placeholder="Your answer here" />
         </div>
-      </div>
+      </section>
 
       <div class="submitwrap">
         <button class="submit" id="submitBtn">Submit check-in</button>
@@ -649,19 +631,6 @@ function wireContact() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 }
 
-/* ---- Accordion helper (keyboard accessible) ---- */
-function wireAccordion(headEl) {
-  const root = headEl.parentElement;
-  const toggle = () => {
-    const collapsed = root.classList.toggle('collapsed');
-    headEl.setAttribute('aria-expanded', !collapsed);
-  };
-  headEl.addEventListener('click', toggle);
-  headEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-  });
-}
-
 /* ---- Guests ---- */
 const guestsEl = $('#guests');
 function renderGuests() {
@@ -773,9 +742,6 @@ $('#submitBtn').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   $('#tState').textContent = 'submitted ✓ (see console)';
 });
-
-/* ---- Additional info accordion ---- */
-wireAccordion($('#addInfo .guest-head'));
 
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
