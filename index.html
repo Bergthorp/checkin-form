@@ -395,17 +395,38 @@
     transition: border-color .18s, box-shadow .18s;
   }
   .canal-card.selected { border-color: #a9dcb9; box-shadow: 0 6px 22px rgba(46, 158, 91, .14); }
-  .canal-photo {
-    position: relative; height: 210px;
+  .canal-compare { position: relative; display: flex; gap: 4px; height: 200px; }
+  .cv-pane { position: relative; flex: 1; overflow: hidden; border-radius: 12px; }
+  .cv-pane img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; z-index: 1; }
+  .cv-now {
+    background: linear-gradient(to bottom, #a9d2ef 0%, #c4dcec 38%, #cdc9bd 56%, #b3aa9c 100%);
+  }
+  .cv-now::after {
+    content: ""; position: absolute; inset: 54% 0 0 0;
+    background: repeating-linear-gradient(90deg, rgba(108, 110, 122, .20) 0 13px, rgba(255, 255, 255, .12) 13px 28px);
+  }
+  .cv-canal {
     background:
       radial-gradient(120% 80% at 76% 32%, rgba(255, 226, 158, .95), rgba(255, 170, 95, 0) 55%),
       linear-gradient(to bottom, #aebfe0 0%, #e7c4a6 40%, #f1a064 56%, #8a6f86 70%, #45506a 100%);
   }
-  .canal-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .canal-card.selected .cv-canal { box-shadow: inset 0 0 0 3px #2e9e5b; }
+  .cv-label {
+    position: absolute; left: 9px; bottom: 9px; z-index: 3;
+    background: rgba(20, 28, 40, .72); color: #fff; font-size: 12px; font-weight: 800;
+    padding: 5px 11px; border-radius: 999px;
+  }
+  .cv-label-up { background: rgba(22, 122, 69, .94); }
+  .cv-arrow {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4;
+    width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--teal);
+    display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 800;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .22);
+  }
   .canal-tag {
-    position: absolute; top: 12px; left: 12px; z-index: 1;
-    background: rgba(16, 52, 40, .88); color: #fff; font-size: 12.5px; font-weight: 800;
-    padding: 6px 12px; border-radius: 999px;
+    position: absolute; top: 10px; left: 10px; z-index: 3;
+    background: rgba(16, 52, 40, .9); color: #fff; font-size: 12px; font-weight: 800;
+    padding: 5px 11px; border-radius: 999px;
   }
   .canal-body { padding: 20px 22px 22px; }
   .canal-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
@@ -519,7 +540,8 @@
     #formView, #extrasView { padding: 28px 22px 34px; border-radius: 18px; }
     h1 { font-size: 28px; }
     .grid-2, .guest-grid { grid-template-columns: 1fr; gap: 22px; }
-    .canal-photo { height: 172px; }
+    .canal-compare { height: 148px; }
+    .cv-arrow { width: 34px; height: 34px; font-size: 18px; }
     .deposit-title { font-size: 23px; }
   }
 </style>
@@ -679,9 +701,17 @@
       <!-- Canal view upgrade -->
       <section>
         <div class="canal-card" id="canalCard">
-          <div class="canal-photo">
-            <span class="canal-tag" id="canalTag" hidden>✓ Added</span>
-            <img src="canal-view.jpg" alt="Apartment balcony overlooking the canal at sunset" onerror="this.style.display='none'" />
+          <div class="canal-compare">
+            <div class="cv-pane cv-now">
+              <img src="current-view.jpg" alt="Your apartment's current outlook" onerror="this.style.display='none'" />
+              <span class="cv-label">Your view now</span>
+            </div>
+            <div class="cv-arrow" aria-hidden="true">&rarr;</div>
+            <div class="cv-pane cv-canal">
+              <span class="canal-tag" id="canalTag" hidden>✓ Added</span>
+              <img src="canal-view.jpg" alt="Apartment balcony overlooking the canal at sunset" onerror="this.style.display='none'" />
+              <span class="cv-label cv-label-up">Canal view</span>
+            </div>
           </div>
           <div class="canal-body">
             <div class="canal-row">
