@@ -143,6 +143,9 @@
   .collapsed .guest-body { display: none; }
   .guest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 40px; margin-bottom: 24px; }
 
+  /* ---------- Guest ID blocks ---------- */
+  .guest-name { color: var(--teal); font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+
   /* ---------- Upload ---------- */
   .uplabel { display: block; font-size: 14px; color: var(--label); margin-bottom: 10px; }
   .upbtn {
@@ -265,6 +268,10 @@
       <hr class="divider" />
 
       <!-- Guests -->
+      <section>
+        <h2>Guest IDs <span class="req">*</span></h2>
+        <div class="note">Upload a clear photo of each guest’s passport or ID — that’s all we need.</div>
+      </section>
       <div id="guests"></div>
 
       <hr class="divider" />
@@ -299,7 +306,6 @@
       <h1>You’re all checked in!</h1>
       <div class="sub">We’ve received your details. Your arrival instructions will be sent before check-in.</div>
       <div class="done-card">
-        <div class="row"><span class="k">Lead guest</span><span class="v" id="doneName">—</span></div>
         <div class="row"><span class="k">Guests</span><span class="v" id="doneGuests">—</span></div>
         <div class="row"><span class="k">Arrival</span><span class="v" id="doneArr">—</span></div>
         <div class="row"><span class="k">Departure</span><span class="v" id="doneDep">—</span></div>
@@ -320,7 +326,7 @@
 <script>
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-const LS_KEY = 'checkin-draft-v3';
+const LS_KEY = 'checkin-draft-v4';
 
 /* ---- Country dial codes ---- */
 const COUNTRIES = [
@@ -390,12 +396,10 @@ const state = {
   arrTime: '', depTime: '',
   parking: '', sofaBed: '',
   guests: [
-    { fullName: 'Ahmed Abdul Karim', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' },
-    { fullName: '', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' }
+    { idPhoto: '', idPreview: '' },
+    { idPhoto: '', idPreview: '' }
   ]
 };
-
-const NATIONALITIES = ['Iceland','United States','United Kingdom','United Arab Emirates','Germany','France','Spain','Italy','Netherlands','Canada','Australia','Other'];
 
 function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function load() {
@@ -509,71 +513,19 @@ function wireAccordion(headEl) {
 
 /* ---- Guests ---- */
 const guestsEl = $('#guests');
-function guestTitle(i) { return state.guests[i].fullName.trim() || `Guest ${i + 1}`; }
-
 function renderGuests() {
   guestsEl.innerHTML = '';
   state.guests.forEach((g, i) => {
     const block = document.createElement('div');
     block.className = 'guest';
-    const natOpts = ['<option value="">Select…</option>']
-      .concat(NATIONALITIES.map(n => `<option${n===g.nationality?' selected':''}>${n}</option>`)).join('');
-    const docOpts = ['Passport','National ID','Driver’s license']
-      .map(d => `<option${d===g.docType?' selected':''}>${d}</option>`).join('');
     block.innerHTML = `
-      <div class="guest-head" role="button" tabindex="0" aria-expanded="true">
-        <h2 data-title>${guestTitle(i)}</h2>
-        <span class="chev">⌃</span>
-      </div>
-      <div class="guest-body">
-        <div class="guest-grid">
-          <div class="field">
-            <label class="lbl">Full name <span class="req">*</span></label>
-            <input type="text" data-f="fullName" value="${g.fullName.replace(/"/g,'&quot;')}" placeholder="Full name" />
-            <div class="err" data-gerr="fullName">Please enter the guest’s full name.</div>
-          </div>
-          <div class="field">
-            <label class="lbl">Nationality <span class="req">*</span></label>
-            <select data-f="nationality">${natOpts}</select>
-            <div class="err" data-gerr="nationality">Please select a nationality.</div>
-          </div>
-          <div class="field">
-            <label class="lbl">Date of birth</label>
-            <input type="date" data-f="dob" value="${g.dob}" />
-          </div>
-          <div class="field">
-            <label class="lbl">Document type</label>
-            <select data-f="docType">${docOpts}</select>
-          </div>
-          <div class="field">
-            <label class="lbl">Document number</label>
-            <input type="text" data-f="docNum" value="${g.docNum.replace(/"/g,'&quot;')}" placeholder="Document number" />
-          </div>
-        </div>
-        <label class="uplabel">ID photo <span class="req">*</span></label>
-        <label class="upbtn">Upload file<input type="file" accept="image/*" /></label>
-        <div class="err" data-gerr="idPhoto">Please upload an ID photo.</div>
-        <div class="uppreview">
-          <img alt="ID preview" />
-          <div><div class="nm"></div><span class="rm">Remove</span></div>
-        </div>
+      <h3 class="guest-name">Guest ${i + 1}</h3>
+      <label class="upbtn">Upload ID<input type="file" accept="image/*" /></label>
+      <div class="err" data-gerr="idPhoto">Please upload a photo of this guest’s ID.</div>
+      <div class="uppreview">
+        <img alt="ID preview" />
+        <div><div class="nm"></div><span class="rm">Remove</span></div>
       </div>`;
-
-    // accordion
-    wireAccordion($('.guest-head', block));
-
-    // text/select fields
-    $$('[data-f]', block).forEach(inp => {
-      const f = inp.dataset.f;
-      const evt = inp.tagName === 'SELECT' ? 'change' : 'input';
-      inp.addEventListener(evt, () => {
-        g[f] = inp.value;
-        if (f === 'fullName') $('[data-title]', block).textContent = guestTitle(i);
-        if (f === 'nationality') clearGErr(block, 'nationality');
-        if (f === 'fullName') clearGErr(block, 'fullName');
-        save();
-      });
-    });
 
     // file upload + preview
     const fileInp = $('input[type=file]', block);
@@ -622,17 +574,13 @@ function validate() {
   // arrival / departure time
   if (!state.arrTime) { $('#arrChips').classList.add('invalid'); showErr('arrTime'); fail($('#arrChips')); }
   if (!state.depTime) { $('#depChips').classList.add('invalid'); showErr('depTime'); fail($('#depChips')); }
-  // guests
+  // guests — ID photo only
   $$('.guest').forEach((block, i) => {
-    const g = state.guests[i];
-    if (!g.fullName.trim())   { $('[data-f="fullName"]', block).classList.add('invalid'); $('.err[data-gerr="fullName"]', block).classList.add('show'); fail(block); ensureOpen(block); }
-    if (!g.nationality)       { $('[data-f="nationality"]', block).classList.add('invalid'); $('.err[data-gerr="nationality"]', block).classList.add('show'); fail(block); ensureOpen(block); }
-    if (!g.idPhoto)           { $('.err[data-gerr="idPhoto"]', block).classList.add('show'); fail(block); ensureOpen(block); }
+    if (!state.guests[i].idPhoto) { $('.err[data-gerr="idPhoto"]', block).classList.add('show'); fail(block); }
   });
 
   return firstBad;
 }
-function ensureOpen(block) { block.classList.remove('collapsed'); $('.guest-head', block)?.setAttribute('aria-expanded', true); }
 
 /* ---- Submit ---- */
 $('#submitBtn').addEventListener('click', () => {
@@ -646,7 +594,6 @@ $('#submitBtn').addEventListener('click', () => {
   console.log('CHECK-IN SUBMITTED →', JSON.parse(JSON.stringify(state)));
 
   // confirmation
-  $('#doneName').textContent = guestTitle(0);
   $('#doneGuests').textContent = state.guests.length;
   $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
   $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
@@ -664,9 +611,7 @@ $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
   state.arrTime = '18:00'; state.depTime = '10:00';
   state.parking = 'A 12345'; state.sofaBed = 'Yes please';
-  state.guests.forEach((g, i) => {
-    if (!g.fullName) g.fullName = 'Guest ' + (i + 1) + ' Name';
-    g.nationality = 'Iceland'; g.docNum = 'X' + (1000000 + i);
+  state.guests.forEach((g) => {
     g.idPhoto = 'passport_demo.jpg';
     g.idPreview = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23cdeee1"/><text x="32" y="38" font-size="10" text-anchor="middle" fill="%230e4f4a">ID</text></svg>');
   });
@@ -674,7 +619,7 @@ $('#tFill').addEventListener('click', () => {
   $('#tState').textContent = 'autofilled ✓';
 });
 $('#tAddGuest').addEventListener('click', () => {
-  state.guests.push({ fullName: '', nationality: '', dob: '', docType: 'Passport', docNum: '', idPhoto: '', idPreview: '' });
+  state.guests.push({ idPhoto: '', idPreview: '' });
   save(); renderGuests();
 });
 $('#tReset').addEventListener('click', () => { localStorage.removeItem(LS_KEY); location.reload(); });
