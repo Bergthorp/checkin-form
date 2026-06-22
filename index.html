@@ -197,8 +197,23 @@
     position: absolute; left: 12px; right: 12px; top: 50%; height: 48px;
     transform: translateY(-50%); border-radius: 10px;
     background: rgba(108,192,180,.14); border: 1.5px solid var(--teal-line);
-    pointer-events: none;
+    pointer-events: none; transition: background .18s, border-color .18s;
   }
+  /* Non-standard ("off") zone: earlier-than-standard arrival / later-than-standard departure.
+     Tinted grey so it visibly reads as "not the standard window". */
+  .wheel-band.off { background: rgba(150,156,166,.16); border-color: #cbced6; }
+  .wheel-item.off { background: #f3f4f6; color: #9aa1ac; }
+  .wheel-item.off.active { color: #69707c; }
+  .wheel-item.edge-bottom { box-shadow: inset 0 -2px 0 0 #d7dae1; }
+  .wheel-item.edge-top { box-shadow: inset 0 2px 0 0 #d7dae1; }
+  .wheel-hint {
+    min-height: 18px; margin: 0 12px; padding: 9px 6px 5px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px; font-weight: 600; line-height: 1.45; text-align: center;
+    color: var(--text-soft); transition: color .18s;
+  }
+  .wheel-hint.off { color: #5f6671; }
+  .wheel-hint .wh-ic { margin-right: 5px; opacity: .75; font-weight: 700; }
 
   .guest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 40px; margin-bottom: 24px; }
 
@@ -430,6 +445,7 @@
               <div class="wheel-scroll" id="arrScroll"></div>
               <div class="wheel-band"></div>
             </div>
+            <div class="wheel-hint" id="arrHint"></div>
             <button type="button" class="wheel-confirm" id="arrConfirm">Set time</button>
           </div>
         </div>
@@ -457,6 +473,7 @@
               <div class="wheel-scroll" id="depScroll"></div>
               <div class="wheel-band"></div>
             </div>
+            <div class="wheel-hint" id="depHint"></div>
             <button type="button" class="wheel-confirm" id="depConfirm">Set time</button>
           </div>
         </div>
@@ -712,8 +729,14 @@ const DEP_LATE  = ['12:00', '13:00'];                      // after 11 AM → la
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
 const WHEEL_ITEM = 48;
 const TIME_FIELDS = [
-  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal', confirm: 'arrConfirm', def: '15:00' },
-  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal', confirm: 'depConfirm', def: '11:00' }
+  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal', confirm: 'arrConfirm', hint: 'arrHint', def: '15:00',
+    off: ARR_EARLY, offSide: 'top',
+    stdHint: 'Your apartment is ready from 3:00 PM.',
+    offHint: 'Early check-in is subject to availability — bag drop is always free.' },
+  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal', confirm: 'depConfirm', hint: 'depHint', def: '11:00',
+    off: DEP_LATE, offSide: 'bottom',
+    stdHint: 'Check-out is by 11:00 AM.',
+    offHint: 'Late check-out is subject to availability.' }
 ];
 function refreshTimeButtons() {
   TIME_FIELDS.forEach(f => {
@@ -808,17 +831,30 @@ function setupWheels() {
   const clamp = (f, idx) => Math.max(0, Math.min(f.slots.length - 1, idx));
   TIME_FIELDS.forEach(f => {
     const wrap = $('#' + f.field), btn = $('#' + f.btn), wheel = $('#' + f.wheel),
-          sc = $('#' + f.scroll), confirm = $('#' + f.confirm);
+          sc = $('#' + f.scroll), confirm = $('#' + f.confirm),
+          band = wheel.querySelector('.wheel-band'), hintEl = $('#' + f.hint);
+    // Indices of the non-standard ("off") slots and the one bordering the standard band.
+    const offIdx = f.slots.map((s, i) => f.off.includes(s.v) ? i : -1).filter(i => i >= 0);
+    const edgeIdx = f.offSide === 'top' ? Math.max(...offIdx) : Math.min(...offIdx);
     sc.innerHTML = '<div class="wheel-pad"></div>'
-      + f.slots.map((s, i) => `<div class="wheel-item" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`).join('')
+      + f.slots.map((s, i) => {
+          const cls = ['wheel-item'];
+          if (f.off.includes(s.v)) { cls.push('off'); if (i === edgeIdx) cls.push(f.offSide === 'top' ? 'edge-bottom' : 'edge-top'); }
+          return `<div class="${cls.join(' ')}" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`;
+        }).join('')
       + '<div class="wheel-pad"></div>';
     const items = $$('.wheel-item', sc);
     let tentative = 0;
     // Highlight the centered slot, but DON'T commit it — the guest must tap Confirm.
+    // Crossing into the "off" zone recolors the band grey and swaps the hint to an availability note.
     const setActive = idx => {
       tentative = clamp(f, idx);
       items.forEach((it, i) => it.classList.toggle('active', i === tentative));
-      confirm.textContent = 'Set ' + f.slots[tentative].t;
+      const slot = f.slots[tentative], off = f.off.includes(slot.v);
+      band.classList.toggle('off', off);
+      hintEl.classList.toggle('off', off);
+      hintEl.innerHTML = off ? `<span class="wh-ic">ⓘ</span>${f.offHint}` : f.stdHint;
+      confirm.textContent = 'Set ' + slot.t;
     };
     const open = () => {
       wheel.hidden = false; btn.setAttribute('aria-expanded', true);
