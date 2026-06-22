@@ -453,10 +453,9 @@ const state = {
 
 function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function load() {
-  try {
-    const s = JSON.parse(localStorage.getItem(LS_KEY));
-    if (s && typeof s === 'object') Object.assign(state, s);
-  } catch (e) {}
+  // Every visit starts fresh — clear any prior draft so the form
+  // always appears as it would to a brand-new guest.
+  localStorage.removeItem(LS_KEY);
 }
 
 /* ---- Time chips (no default — guest must choose) ---- */
