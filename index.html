@@ -33,11 +33,26 @@
     color: var(--text);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    padding: 60px 40px 120px;
+    padding: 48px 20px 120px;
   }
-  .wrap { max-width: var(--maxw); margin: 0 auto; }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  #formView {
+    background: var(--surface);
+    border-radius: 22px;
+    padding: 44px 44px 48px;
+    box-shadow: 0 6px 30px rgba(20, 35, 70, .07);
+  }
 
-  h1 { color: var(--teal); font-size: 40px; font-weight: 800; letter-spacing: -0.5px; }
+  /* ---------- Brand ---------- */
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .brand-mark {
+    width: 46px; height: 46px; border-radius: 13px; flex: none;
+    background: var(--teal); color: #fff; display: grid; place-items: center;
+    font-size: 23px; box-shadow: 0 4px 12px rgba(14, 79, 74, .28);
+  }
+  .brand-name { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-soft); }
+
+  h1 { color: var(--teal); font-size: 34px; font-weight: 800; letter-spacing: -0.5px; }
   .sub { color: var(--text); font-size: 16px; margin-top: 4px; margin-bottom: 44px; }
   h2 { color: var(--teal); font-size: 22px; font-weight: 700; margin-bottom: 26px; }
   .req { color: var(--asterisk); margin-left: 2px; }
@@ -48,7 +63,7 @@
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .divider { border: none; border-top: 3px dotted var(--border); margin: 40px 0; }
+  .divider { border: none; border-top: 1px solid #e6e9ea; margin: 36px 0; }
 
   /* ---------- Fields ---------- */
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 40px; }
@@ -133,7 +148,7 @@
   .ccempty { padding: 14px 12px; color: var(--text-soft); font-size: 14px; }
 
   /* ---------- Time wheel picker ---------- */
-  .timefield { position: relative; max-width: 300px; }
+  .timefield { position: relative; }
   .timebtn {
     width: 100%; display: flex; align-items: center; justify-content: space-between;
     background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
@@ -194,11 +209,13 @@
   /* ---------- Upload ---------- */
   .uplabel { display: block; font-size: 14px; color: var(--label); margin-bottom: 10px; }
   .upbtn {
-    display: inline-block; background: var(--mint); color: var(--teal);
-    font-weight: 700; font-size: 15px; padding: 13px 26px;
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--mint); color: var(--teal);
+    font-weight: 700; font-size: 15px; padding: 13px 24px;
     border-radius: 99px; border: none; cursor: pointer; transition: .15s;
   }
   .upbtn:hover { background: var(--mint-hover); }
+  .upbtn-ic { font-size: 17px; line-height: 1; }
   .upbtn input { display: none; }
   .uppreview { margin-top: 14px; display: none; align-items: center; gap: 14px; }
   .uppreview img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
@@ -253,8 +270,9 @@
   .testbar .tag { background: var(--mint); color: var(--teal); font-weight: 700; padding: 2px 8px; border-radius: 6px; }
 
   @media (max-width: 760px) {
-    body { padding: 32px 18px 110px; }
-    h1 { font-size: 30px; }
+    body { padding: 20px 12px 110px; }
+    #formView { padding: 28px 22px 34px; border-radius: 18px; }
+    h1 { font-size: 28px; }
     .grid-2, .guest-grid { grid-template-columns: 1fr; gap: 22px; }
   }
 </style>
@@ -264,6 +282,10 @@
 
     <!-- ===================== FORM ===================== -->
     <div id="formView">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🔑</span>
+        <span class="brand-name">Guest Check-in</span>
+      </div>
       <h1>Online check-in form</h1>
 
       <!-- Contact details -->
@@ -610,7 +632,7 @@ function renderGuests() {
         <h3 class="guest-name">Guest ${i + 1}</h3>
         ${state.guests.length > 1 ? '<button type="button" class="guest-remove">Remove</button>' : ''}
       </div>
-      <label class="upbtn">Upload ID<input type="file" accept="image/*" /></label>
+      <label class="upbtn"><span class="upbtn-ic" aria-hidden="true">📷</span>Upload ID<input type="file" accept="image/*" /></label>
       <div class="err" data-gerr="idPhoto">Please upload a photo of this guest’s ID.</div>
       <div class="uppreview">
         <img alt="ID preview" />
