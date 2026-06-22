@@ -287,8 +287,30 @@
   }
   .addon-opt:hover { border-color: #e2a878; }
   .addon-opt.active { background: #fbe6d4; border-color: #b4521f; color: #b4521f; }
-  .addon-opt[data-val=""].active { background: var(--mint); border-color: var(--teal); color: var(--teal); }
   .addon-price { font-size: 13px; font-weight: 800; color: #b4521f; }
+  .addon-opt.comp .addon-price { color: var(--teal); }
+  .addon-opt.comp.active { background: var(--mint); border-color: var(--teal); color: var(--teal); }
+  .addon-opt.comp.active .addon-price { color: var(--teal); }
+
+  /* request → checking → offers */
+  .req-btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 99px;
+    border: 1.5px solid var(--teal); background: #fff; color: var(--teal);
+    font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; transition: .15s;
+  }
+  .req-btn:hover { background: var(--mint); }
+  .req-loading { display: flex; align-items: center; gap: 10px; color: var(--text-soft); font-size: 15px; font-weight: 600; }
+  .spinner {
+    width: 17px; height: 17px; border-radius: 50%; flex: none;
+    border: 2.5px solid #e7d4bf; border-top-color: #b4521f; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .req-line { font-size: 14.5px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+  .req-cancel {
+    display: inline-block; margin-top: 14px; background: none; border: none; padding: 0;
+    color: var(--text-soft); font-family: var(--font); font-size: 14px; cursor: pointer; text-decoration: underline;
+  }
+  .req-cancel:hover { color: var(--teal); }
 
   /* ---------- Upgrade summary ---------- */
   #upsell { margin-top: 8px; }
@@ -429,15 +451,17 @@
         <div class="err" data-for="arrTime">Please choose your arrival time.</div>
       </section>
 
-      <!-- Early check-in upsell (optional, paid) -->
+      <!-- Early check-in upsell (request → check → offers) -->
       <section id="earlyUpsell">
         <div class="addon">
           <div class="addon-title">Want to get in earlier?</div>
-          <div class="addon-sub">Your room is guaranteed from 3:00 PM. Add early check-in to be sure it’s ready when you arrive.</div>
-          <div class="addon-opts" id="earlyOpts" role="group" aria-label="Early check-in">
-            <button type="button" class="addon-opt" data-val="">No, thanks</button>
-            <button type="button" class="addon-opt" data-val="14:00">From 2:00 PM <span class="addon-price">+$69</span></button>
-            <button type="button" class="addon-opt" data-val="13:00">From 1:00 PM <span class="addon-price">+$138</span></button>
+          <div class="addon-sub">Your room is guaranteed from 3:00 PM. Request early check-in and we’ll see what we can do.</div>
+          <button type="button" class="req-btn" id="earlyReqBtn">Request early check-in</button>
+          <div class="req-loading" id="earlyLoading" hidden><span class="spinner" aria-hidden="true"></span> Checking availability…</div>
+          <div class="req-result" id="earlyResult" hidden>
+            <div class="req-line" id="earlyLine"></div>
+            <div class="addon-opts" id="earlyOpts" role="group" aria-label="Early check-in"></div>
+            <button type="button" class="req-cancel" id="earlyCancel">Not now</button>
           </div>
         </div>
       </section>
@@ -461,15 +485,17 @@
         <div class="err" data-for="depTime">Please choose your departure time.</div>
       </section>
 
-      <!-- Late check-out upsell (optional, paid) -->
+      <!-- Late check-out upsell (request → check → offers) -->
       <section id="lateUpsell" hidden>
         <div class="addon">
           <div class="addon-title">Need a few more hours?</div>
-          <div class="addon-sub">Standard check-out is 11:00 AM. Add late check-out to keep your room longer.</div>
-          <div class="addon-opts" id="lateOpts" role="group" aria-label="Late check-out">
-            <button type="button" class="addon-opt" data-val="">No, thanks</button>
-            <button type="button" class="addon-opt" data-val="12:00">Until 12:00 PM <span class="addon-price">+$69</span></button>
-            <button type="button" class="addon-opt" data-val="13:00">Until 1:00 PM <span class="addon-price">+$138</span></button>
+          <div class="addon-sub">Standard check-out is 11:00 AM. Request late check-out and we’ll see what we can do.</div>
+          <button type="button" class="req-btn" id="lateReqBtn">Request late check-out</button>
+          <div class="req-loading" id="lateLoading" hidden><span class="spinner" aria-hidden="true"></span> Checking availability…</div>
+          <div class="req-result" id="lateResult" hidden>
+            <div class="req-line" id="lateLine"></div>
+            <div class="addon-opts" id="lateOpts" role="group" aria-label="Late check-out"></div>
+            <button type="button" class="req-cancel" id="lateCancel">Not now</button>
           </div>
         </div>
       </section>
@@ -690,12 +716,30 @@ const DEP_SLOTS = [
 ];
 function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
 
-/* ---- Paid add-ons (separate, explicit opt-in — NOT the dials) ---- */
+/* ---- Paid add-ons: request → check → offers (NOT the dials) ----
+   getEarlyOffers/getLateOffers are STUBS today (return a fixed list). They are the
+   single place to later plug in real logic: query the calendar (e.g. unit free the
+   night before → add an 8:00 AM slot at a higher price) and loyalty (e.g. 4th stay or
+   direct booking → return a $0 `comp:true` offer). The UI already renders whatever
+   they return, including complimentary offers, so nothing else needs to change. */
 const EARLY_OPTS = [ { v: '14:00', t: '2:00 PM', price: 69 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
 const LATE_OPTS  = [ { v: '12:00', t: '12:00 PM', price: 69 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
-function optPrice(opts, v) { const o = opts.find(x => x.v === v); return o ? o.price : 0; }
+function getEarlyOffers() { return EARLY_OPTS; }
+function getLateOffers()  { return LATE_OPTS; }
+function optPrice(opts, v) { const o = opts.find(x => x.v === v); return o && o.price ? o.price : 0; }
 function optLabel(opts, v) { const o = opts.find(x => x.v === v); return o ? o.t : ''; }
 function totalPrice() { return optPrice(EARLY_OPTS, state.earlyCheckin) + optPrice(LATE_OPTS, state.lateCheckout); }
+
+const UPSELLS = {
+  early: { key: 'earlyCheckin', offers: getEarlyOffers, prefix: 'From',
+           reqBtn: 'earlyReqBtn', loading: 'earlyLoading', result: 'earlyResult',
+           line: 'earlyLine', opts: 'earlyOpts', cancel: 'earlyCancel',
+           offerLine: 'Good news — we can guarantee early check-in for your stay:' },
+  late:  { key: 'lateCheckout', offers: getLateOffers, prefix: 'Until',
+           reqBtn: 'lateReqBtn', loading: 'lateLoading', result: 'lateResult',
+           line: 'lateLine', opts: 'lateOpts', cancel: 'lateCancel',
+           offerLine: 'Good news — we can extend your check-out:' }
+};
 
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
 const WHEEL_ITEM = 48;
@@ -719,23 +763,66 @@ function refreshTimeButtons() {
   if (state.arrTime && late && late.hidden) { late.hidden = false; late.classList.add('reveal'); }
 }
 
-/* ---- Add-on option selectors (early check-in / late check-out) ---- */
+/* ---- Add-on flow: request → "checking…" → offers ---- */
+function renderOffers(cfg) {
+  const sel = state[cfg.key];
+  $('#' + cfg.opts).innerHTML = cfg.offers().map(o => {
+    const priceTxt = o.price ? `+$${o.price}` : 'Complimentary';
+    const cls = 'addon-opt' + (o.price ? '' : ' comp') + (o.v === sel ? ' active' : '');
+    return `<button type="button" class="${cls}" data-val="${o.v}">${cfg.prefix} ${o.t} <span class="addon-price">${priceTxt}</span></button>`;
+  }).join('');
+  $$('#' + cfg.opts + ' .addon-opt').forEach(b => b.addEventListener('click', () => {
+    state[cfg.key] = state[cfg.key] === b.dataset.val ? '' : b.dataset.val;
+    renderOffers(cfg); renderUpsell(); save();
+  }));
+}
+function openOffers(cfg) {
+  $('#' + cfg.line).textContent = cfg.offerLine;
+  renderOffers(cfg);
+  $('#' + cfg.reqBtn).hidden = true;
+  $('#' + cfg.loading).hidden = true;
+  $('#' + cfg.result).hidden = false;
+}
+function requestOffers(cfg) {
+  $('#' + cfg.reqBtn).hidden = true;
+  $('#' + cfg.result).hidden = true;
+  $('#' + cfg.loading).hidden = false;
+  // Simulated availability/loyalty check — swap for a real async call later.
+  setTimeout(() => { $('#' + cfg.loading).hidden = true; openOffers(cfg); }, 1500);
+}
+function cancelOffers(cfg) {
+  state[cfg.key] = '';
+  $('#' + cfg.result).hidden = true;
+  $('#' + cfg.loading).hidden = true;
+  $('#' + cfg.reqBtn).hidden = false;
+  renderUpsell(); save();
+}
 function renderAddons() {
-  $$('#earlyOpts .addon-opt').forEach(b => b.classList.toggle('active', b.dataset.val === state.earlyCheckin));
-  $$('#lateOpts .addon-opt').forEach(b => b.classList.toggle('active', b.dataset.val === state.lateCheckout));
+  Object.values(UPSELLS).forEach(cfg => {
+    if (state[cfg.key]) { openOffers(cfg); }
+    else {
+      $('#' + cfg.result).hidden = true;
+      $('#' + cfg.loading).hidden = true;
+      $('#' + cfg.reqBtn).hidden = false;
+    }
+  });
   renderUpsell();
 }
 
 /* ---- Paid-upgrade summary + dynamic submit label ---- */
+function addonRow(label, opts, v) {
+  const p = optPrice(opts, v);
+  return `<div class="up-row"><span class="up-k">${label} · ${optLabel(opts, v)}</span><span class="up-v">${p ? '+$' + p : 'Free'}</span></div>`;
+}
 function renderUpsell() {
   const box = $('#upsell'), list = $('#upsellList'), total = totalPrice();
   if (!box) return;
   const rows = [];
-  if (state.earlyCheckin) rows.push(`<div class="up-row"><span class="up-k">Early check-in · ${optLabel(EARLY_OPTS, state.earlyCheckin)}</span><span class="up-v">+$${optPrice(EARLY_OPTS, state.earlyCheckin)}</span></div>`);
-  if (state.lateCheckout) rows.push(`<div class="up-row"><span class="up-k">Late check-out · ${optLabel(LATE_OPTS, state.lateCheckout)}</span><span class="up-v">+$${optPrice(LATE_OPTS, state.lateCheckout)}</span></div>`);
-  if (total > 0) {
+  if (state.earlyCheckin) rows.push(addonRow('Early check-in', EARLY_OPTS, state.earlyCheckin));
+  if (state.lateCheckout) rows.push(addonRow('Late check-out', LATE_OPTS, state.lateCheckout));
+  if (rows.length) {
     list.innerHTML = rows.join('')
-      + `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>`;
+      + (total > 0 ? `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>` : '');
     box.hidden = false; box.classList.add('reveal');
   } else {
     box.hidden = true;
@@ -813,12 +900,10 @@ function wireContact() {
   $('#email').addEventListener('input', e => { state.email = e.target.value; clearErr('email'); save(); });
   $('#phone').addEventListener('input', e => { state.phone = e.target.value; $('#phoneWrap').classList.remove('invalid'); clearErr('phone'); save(); });
   setupWheels();
-  $$('#earlyOpts .addon-opt').forEach(b => b.addEventListener('click', () => {
-    state.earlyCheckin = b.dataset.val; renderAddons(); save();
-  }));
-  $$('#lateOpts .addon-opt').forEach(b => b.addEventListener('click', () => {
-    state.lateCheckout = b.dataset.val; renderAddons(); save();
-  }));
+  Object.values(UPSELLS).forEach(cfg => {
+    $('#' + cfg.reqBtn).addEventListener('click', () => requestOffers(cfg));
+    $('#' + cfg.cancel).addEventListener('click', () => cancelOffers(cfg));
+  });
   $$('#parkingToggle .yn-btn').forEach(b => b.addEventListener('click', () => {
     state.parking = state.parking === b.dataset.val ? '' : b.dataset.val;
     if (state.parking !== 'yes') state.plate = '';
