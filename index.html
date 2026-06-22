@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Online check-in</title>
+<title>Desert Key Check-In</title>
 <style>
   /* ============================================================
      DESIGN TOKENS — Hostaway-style. Tweak to restyle fast.
@@ -44,15 +44,14 @@
   }
 
   /* ---------- Brand ---------- */
-  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
   .brand-mark {
-    width: 46px; height: 46px; border-radius: 13px; flex: none;
-    background: var(--teal); color: #fff; display: grid; place-items: center;
-    font-size: 23px; box-shadow: 0 4px 12px rgba(14, 79, 74, .28);
+    width: 52px; height: 52px; flex: none; display: block;
+    border-radius: 14px; box-shadow: 0 4px 14px rgba(45, 90, 61, .28);
   }
-  .brand-name { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-soft); }
+  .brand-mark svg { width: 100%; height: 100%; display: block; }
 
-  h1 { color: var(--teal); font-size: 34px; font-weight: 800; letter-spacing: -0.5px; }
+  h1 { color: var(--teal); font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
   .sub { color: var(--text); font-size: 16px; margin-top: 4px; margin-bottom: 44px; }
   h2 { color: var(--teal); font-size: 22px; font-weight: 700; margin-bottom: 26px; }
   .req { color: var(--asterisk); margin-left: 2px; }
@@ -270,6 +269,66 @@
   .done-card .k { color: var(--text-soft); }
   .done-card .v { font-weight: 700; color: var(--text); }
 
+  /* ---------- Paid time slots ---------- */
+  .wheel-tag.price { background: #fbe6d4; color: #b4521f; }
+  .timeprice {
+    margin-left: 8px; padding: 2px 9px; border-radius: 999px;
+    background: #fbe6d4; color: #b4521f; font-size: 13px; font-weight: 800;
+    vertical-align: middle;
+  }
+
+  /* ---------- Upgrade summary ---------- */
+  #upsell { margin-top: 8px; }
+  #upsell[hidden] { display: none; }
+  .up-card { background: #fff7ef; border: 1.5px solid #f1d9c2; border-radius: 14px; padding: 18px 20px; }
+  .up-head { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #b4521f; margin-bottom: 12px; }
+  .up-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; font-size: 15px; }
+  .up-row .up-k { color: var(--text); }
+  .up-row .up-v { font-weight: 700; color: var(--text); white-space: nowrap; }
+  .up-total { border-top: 1px solid #f1d9c2; margin-top: 4px; padding-top: 12px; }
+  .up-total .up-k { font-weight: 800; }
+  .up-total .up-v { font-weight: 800; color: #b4521f; font-size: 17px; }
+  .up-note { font-size: 12.5px; color: var(--text-soft); margin-top: 10px; }
+
+  /* ---------- Simulated Stripe payment ---------- */
+  #payView[hidden] { display: none; }
+  .pay-backdrop { position: fixed; inset: 0; background: rgba(20,28,40,.55); z-index: 100; }
+  .pay-card {
+    position: fixed; z-index: 101; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 420px; max-width: 94vw; max-height: 92vh; overflow-y: auto;
+    background: #fff; border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.3);
+    animation: payIn .25s ease both;
+  }
+  @keyframes payIn { from { opacity: 0; transform: translate(-50%,-46%); } to { opacity: 1; transform: translate(-50%,-50%); } }
+  .pay-top { padding: 22px 24px 18px; border-bottom: 1px solid #eef0f2; }
+  .pay-close { background: none; border: none; font-size: 20px; color: var(--text-soft); cursor: pointer; padding: 0 0 12px; }
+  .pay-merchant { display: flex; align-items: center; gap: 13px; }
+  .pay-mark { width: 44px; height: 44px; flex: none; }
+  .pay-mark svg { width: 100%; height: 100%; border-radius: 11px; display: block; }
+  .pay-merchant-name { font-size: 13px; color: var(--text-soft); font-weight: 600; }
+  .pay-amount { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -.5px; }
+  .pay-body { padding: 20px 24px 24px; }
+  .pay-summary { font-size: 13.5px; color: var(--text-soft); margin-bottom: 18px; line-height: 1.7; }
+  .pay-lbl { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin: 14px 0 6px; }
+  .pay-field {
+    display: flex; align-items: center; gap: 8px; border: 1px solid #d7dbde; border-radius: 8px;
+    padding: 12px 13px; font-size: 15px; color: #6b7378; background: #fbfbfc;
+  }
+  .pay-card-no { justify-content: flex-start; }
+  .pay-cardbrand { font-size: 16px; }
+  .pay-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .pay-field-row + .pay-lbl { margin-top: 14px; }
+  .pay-fake { user-select: none; }
+  .pay-btn {
+    width: 100%; margin-top: 22px; background: #635bff; color: #fff; border: none;
+    border-radius: 8px; padding: 14px; font-size: 16px; font-weight: 700;
+    font-family: var(--font); cursor: pointer; transition: background .15s;
+  }
+  .pay-btn:hover { background: #5249e0; }
+  .pay-btn:disabled { opacity: .75; cursor: default; }
+  .pay-secure { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 14px; }
+  .pay-secure b { color: #635bff; letter-spacing: -.3px; }
+
   /* ---------- Test toolbar (dev only — delete for prod) ---------- */
   .testbar {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -295,10 +354,21 @@
     <!-- ===================== FORM ===================== -->
     <div id="formView">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">🔑</span>
-        <span class="brand-name">Guest Check-in</span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+            <rect width="56" height="56" rx="14" fill="#2f5d3f"/>
+            <circle cx="38" cy="17" r="5.5" fill="#efd9a6"/>
+            <g fill="none" stroke="#efd9a6" stroke-width="3.2" stroke-linecap="round">
+              <circle cx="22" cy="19" r="6"/>
+              <path d="M22 25 V41"/>
+              <path d="M22 34 H28"/>
+              <path d="M22 39 H27"/>
+            </g>
+            <path d="M7 46 Q17 40 27 46 T49 45" fill="none" stroke="#efd9a6" stroke-width="2.6" stroke-linecap="round" opacity=".8"/>
+          </svg>
+        </span>
+        <h1>Desert Key Check-In Form</h1>
       </div>
-      <h1>Online check-in form</h1>
 
       <!-- Contact details -->
       <section>
@@ -394,9 +464,49 @@
         </div>
       </section>
 
+      <section id="upsell" hidden>
+        <div class="up-card">
+          <div class="up-head">Your upgrades</div>
+          <div id="upsellList"></div>
+          <div class="up-note">Charged securely via Stripe when you submit.</div>
+        </div>
+      </section>
+
       <div class="submitwrap">
         <button class="submit" id="submitBtn">Submit check-in</button>
         <div class="formerr" id="formErr">Please fix the highlighted fields above.</div>
+      </div>
+    </div>
+
+    <!-- ===================== SIMULATED STRIPE PAYMENT ===================== -->
+    <div id="payView" hidden>
+      <div class="pay-backdrop"></div>
+      <div class="pay-card" role="dialog" aria-modal="true" aria-label="Payment">
+        <div class="pay-top">
+          <button type="button" class="pay-close" id="payClose" aria-label="Cancel">←</button>
+          <div class="pay-merchant">
+            <span class="pay-mark" aria-hidden="true">
+              <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg"><rect width="56" height="56" rx="14" fill="#2f5d3f"/><g fill="none" stroke="#efd9a6" stroke-width="3.2" stroke-linecap="round"><circle cx="22" cy="19" r="6"/><path d="M22 25 V41"/><path d="M22 34 H28"/><path d="M22 39 H27"/></g><circle cx="38" cy="17" r="5.5" fill="#efd9a6"/></svg>
+            </span>
+            <div>
+              <div class="pay-merchant-name">Desert Key</div>
+              <div class="pay-amount" id="payAmount">$0.00</div>
+            </div>
+          </div>
+        </div>
+        <div class="pay-body">
+          <div class="pay-summary" id="paySummary"></div>
+          <label class="pay-lbl">Card information</label>
+          <div class="pay-field pay-card-no"><span class="pay-cardbrand">💳</span><span class="pay-fake">4242 4242 4242 4242</span></div>
+          <div class="pay-field-row">
+            <div class="pay-field"><span class="pay-fake">12 / 28</span></div>
+            <div class="pay-field"><span class="pay-fake">123</span></div>
+          </div>
+          <label class="pay-lbl">Name on card</label>
+          <div class="pay-field"><span class="pay-fake">Guest name</span></div>
+          <button type="button" class="pay-btn" id="payBtn">Pay $0.00</button>
+          <div class="pay-secure">🔒 Test mode · no real charge · powered by <b>stripe</b></div>
+        </div>
       </div>
     </div>
 
@@ -409,6 +519,7 @@
         <div class="row"><span class="k">Guests</span><span class="v" id="doneGuests">—</span></div>
         <div class="row"><span class="k">Arrival</span><span class="v" id="doneArr">—</span></div>
         <div class="row"><span class="k">Departure</span><span class="v" id="doneDep">—</span></div>
+        <div class="row" id="donePaidRow" hidden><span class="k">Paid via Stripe</span><span class="v" id="donePaid">—</span></div>
       </div>
     </div>
 
@@ -510,7 +621,9 @@ function load() {
 
 /* ---- Time chips (no default — guest must choose) ---- */
 const ARR_SLOTS = [
-  { v: '15:00', t: '3:00 PM', tag: 'Earliest check-in' },
+  { v: '13:00', t: '1:00 PM', price: 138 },
+  { v: '14:00', t: '2:00 PM', price: 69 },
+  { v: '15:00', t: '3:00 PM', free: true },
   { v: '16:00', t: '4:00 PM' },
   { v: '17:00', t: '5:00 PM' },
   { v: '18:00', t: '6:00 PM' },
@@ -529,8 +642,15 @@ const DEP_SLOTS = [
   { v: '08:00', t: '8:00 AM' },
   { v: '09:00', t: '9:00 AM' },
   { v: '10:00', t: '10:00 AM' },
-  { v: '11:00', t: '11:00 AM', tag: 'Latest check-out' }
+  { v: '11:00', t: '11:00 AM', free: true },
+  { v: '12:00', t: '12:00 PM', price: 69 },
+  { v: '13:00', t: '1:00 PM',  price: 138 }
 ];
+const ARR_LABEL = 'Early check-in';
+const DEP_LABEL = 'Late check-out';
+function slotPrice(slots, v) { const s = slots.find(x => x.v === v); return s && s.price ? s.price : 0; }
+function fieldPrice(f) { return slotPrice(f.slots, state[f.key]); }
+function totalPrice() { return TIME_FIELDS.reduce((sum, f) => sum + fieldPrice(f), 0); }
 function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
 
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
@@ -542,12 +662,41 @@ const TIME_FIELDS = [
 function refreshTimeButtons() {
   TIME_FIELDS.forEach(f => {
     const val = $('#' + f.val), wrap = $('#' + f.field), v = state[f.key];
-    if (v) { val.textContent = timeLabel(f.slots, v); val.classList.remove('placeholder'); wrap.classList.add('chosen'); }
-    else   { val.textContent = 'Tap to choose'; val.classList.add('placeholder'); wrap.classList.remove('chosen'); }
+    if (v) {
+      const p = slotPrice(f.slots, v);
+      val.innerHTML = timeLabel(f.slots, v) + (p ? ` <span class="timeprice">+$${p}</span>` : '');
+      val.classList.remove('placeholder'); wrap.classList.add('chosen');
+    } else {
+      val.textContent = 'Tap to choose'; val.classList.add('placeholder'); wrap.classList.remove('chosen');
+    }
   });
   // Progressive disclosure: reveal departure only once arrival is chosen.
   const dep = $('#depSection');
   if (state.arrTime && dep.hidden) { dep.hidden = false; dep.classList.add('reveal'); }
+  renderUpsell();
+}
+
+/* ---- Paid-upgrade summary + dynamic submit label ---- */
+function renderUpsell() {
+  const box = $('#upsell'), list = $('#upsellList'), total = totalPrice();
+  if (!box) return;
+  const rows = [];
+  TIME_FIELDS.forEach(f => {
+    const p = fieldPrice(f);
+    if (p) {
+      const label = f.key === 'arrTime' ? ARR_LABEL : DEP_LABEL;
+      rows.push(`<div class="up-row"><span class="up-k">${label} · ${timeLabel(f.slots, state[f.key])}</span><span class="up-v">+$${p}</span></div>`);
+    }
+  });
+  if (total > 0) {
+    list.innerHTML = rows.join('')
+      + `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>`;
+    box.hidden = false; box.classList.add('reveal');
+  } else {
+    box.hidden = true;
+  }
+  const btn = $('#submitBtn');
+  if (btn) btn.textContent = total > 0 ? `Pay $${total} & submit` : 'Submit check-in';
 }
 function setupWheels() {
   const clamp = (f, idx) => Math.max(0, Math.min(f.slots.length - 1, idx));
@@ -555,7 +704,13 @@ function setupWheels() {
     const wrap = $('#' + f.field), btn = $('#' + f.btn), wheel = $('#' + f.wheel),
           sc = $('#' + f.scroll), confirm = $('#' + f.confirm);
     sc.innerHTML = '<div class="wheel-pad"></div>'
-      + f.slots.map((s, i) => `<div class="wheel-item" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`).join('')
+      + f.slots.map((s, i) => {
+          let pill = '';
+          if (s.price) pill = `<span class="wheel-tag price">+$${s.price}</span>`;
+          else if (s.free) pill = `<span class="wheel-tag">Standard · free</span>`;
+          else if (s.tag) pill = `<span class="wheel-tag">${s.tag}</span>`;
+          return `<div class="wheel-item" data-idx="${i}">${s.t}${pill}</div>`;
+        }).join('')
       + '<div class="wheel-pad"></div>';
     const items = $$('.wheel-item', sc);
     let tentative = 0;
@@ -563,7 +718,8 @@ function setupWheels() {
     const setActive = idx => {
       tentative = clamp(f, idx);
       items.forEach((it, i) => it.classList.toggle('active', i === tentative));
-      confirm.textContent = 'Set ' + f.slots[tentative].t;
+      const sl = f.slots[tentative];
+      confirm.textContent = 'Set ' + sl.t + (sl.price ? ' · +$' + sl.price : '');
     };
     const open = () => {
       wheel.hidden = false; btn.setAttribute('aria-expanded', true);
@@ -734,6 +890,38 @@ function validate() {
 }
 
 /* ---- Submit ---- */
+function finalizeCheckin(paidAmount) {
+  console.log('CHECK-IN SUBMITTED →', JSON.parse(JSON.stringify(state)), 'paid:', paidAmount);
+  $('#doneGuests').textContent = state.guests.length;
+  $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
+  $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
+  if (paidAmount > 0) {
+    $('#donePaid').textContent = '$' + paidAmount;
+    $('#donePaidRow').hidden = false;
+  } else {
+    $('#donePaidRow').hidden = true;
+  }
+  $('#formView').style.display = 'none';
+  $('#payView').hidden = true;
+  $('#doneView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('#tState').textContent = 'submitted ✓ (see console)';
+}
+
+function openPay(total) {
+  const items = [];
+  TIME_FIELDS.forEach(f => {
+    const p = fieldPrice(f);
+    if (p) items.push(`${f.key === 'arrTime' ? ARR_LABEL : DEP_LABEL} (${timeLabel(f.slots, state[f.key])}) — $${p}`);
+  });
+  $('#paySummary').innerHTML = items.join('<br>');
+  $('#payAmount').textContent = '$' + total.toFixed(2);
+  const btn = $('#payBtn');
+  btn.disabled = false;
+  btn.textContent = 'Pay $' + total.toFixed(2);
+  $('#payView').hidden = false;
+}
+
 $('#submitBtn').addEventListener('click', () => {
   const bad = validate();
   if (bad) {
@@ -742,22 +930,27 @@ $('#submitBtn').addEventListener('click', () => {
     return;
   }
   $('#formErr').classList.remove('show');
-  console.log('CHECK-IN SUBMITTED →', JSON.parse(JSON.stringify(state)));
+  const total = totalPrice();
+  if (total > 0) openPay(total);
+  else finalizeCheckin(0);
+});
 
-  // confirmation
-  $('#doneGuests').textContent = state.guests.length;
-  $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
-  $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
-  $('#formView').style.display = 'none';
-  $('#doneView').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  $('#tState').textContent = 'submitted ✓ (see console)';
+$('#payClose').addEventListener('click', () => { $('#payView').hidden = true; });
+$('#payBtn').addEventListener('click', () => {
+  const total = totalPrice();
+  const btn = $('#payBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+  setTimeout(() => {
+    btn.textContent = 'Paid ✓';
+    setTimeout(() => finalizeCheckin(total), 600);
+  }, 1100);
 });
 
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
   state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
-  state.arrTime = '18:00'; state.depTime = '10:00';
+  state.arrTime = '14:00'; state.depTime = '12:00';
   state.parking = 'A 12345'; state.sofaBed = 'yes';
   state.guests.forEach((g) => {
     g.idPhoto = 'passport_demo.jpg';
