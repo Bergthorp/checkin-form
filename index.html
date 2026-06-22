@@ -47,9 +47,9 @@
   .brand { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
   .brand-mark {
     width: 52px; height: 52px; flex: none; display: block;
-    border-radius: 14px; box-shadow: 0 4px 14px rgba(45, 90, 61, .28);
+    border-radius: 14px; overflow: hidden; object-fit: cover;
+    box-shadow: 0 4px 14px rgba(45, 90, 61, .28);
   }
-  .brand-mark svg { width: 100%; height: 100%; display: block; }
 
   h1 { color: var(--teal); font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
   .sub { color: var(--text); font-size: 16px; margin-top: 4px; margin-bottom: 44px; }
@@ -145,6 +145,13 @@
   .ccitem .nm { flex: 1; }
   .ccitem .dl { color: var(--text-soft); }
   .ccempty { padding: 14px 12px; color: var(--text-soft); font-size: 14px; }
+  /* Keyboard / focus affordances for the custom widgets */
+  .ccitem.kbd { background: var(--mint); }
+  .wheel-scroll:focus { outline: none; }
+  .wheel-scroll:focus-visible { outline: 2px solid var(--teal); outline-offset: -3px; border-radius: 12px; }
+  .cc:focus-visible, .timebtn:focus-visible, .ccsearch:focus-visible,
+  .wheel-confirm:focus-visible, .upbtn:focus-visible, .yn-btn:focus-visible,
+  .ctx-add:focus-visible, .ctx-remove:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 
   /* ---------- Time wheel picker ---------- */
   .timefield { position: relative; }
@@ -389,19 +396,7 @@
     <!-- ===================== FORM ===================== -->
     <div id="formView">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-            <rect width="56" height="56" rx="14" fill="#2f5d3f"/>
-            <circle cx="38" cy="17" r="5.5" fill="#efd9a6"/>
-            <g fill="none" stroke="#efd9a6" stroke-width="3.2" stroke-linecap="round">
-              <circle cx="22" cy="19" r="6"/>
-              <path d="M22 25 V41"/>
-              <path d="M22 34 H28"/>
-              <path d="M22 39 H27"/>
-            </g>
-            <path d="M7 46 Q17 40 27 46 T49 45" fill="none" stroke="#efd9a6" stroke-width="2.6" stroke-linecap="round" opacity=".8"/>
-          </svg>
-        </span>
+        <img class="brand-mark" src="logo-mark.png" alt="" width="52" height="52" />
         <h1>Desert Key Check-In Form</h1>
       </div>
 
@@ -423,8 +418,9 @@
               </button>
               <input type="tel" id="phone" placeholder="+1" />
               <div class="ccpanel" id="ccPanel" hidden>
-                <input type="text" class="ccsearch" id="ccSearch" placeholder="Search country" autocomplete="off" />
-                <div class="cclist" id="ccList" role="listbox"></div>
+                <input type="text" class="ccsearch" id="ccSearch" placeholder="Search country" autocomplete="off"
+                       role="combobox" aria-controls="ccList" aria-expanded="false" aria-autocomplete="list" aria-label="Search country" />
+                <div class="cclist" id="ccList" role="listbox" aria-label="Country code"></div>
               </div>
             </div>
             <div class="err" data-for="phone">Please enter your mobile number.</div>
@@ -442,10 +438,10 @@
           </button>
           <div class="wheel" id="arrWheel" hidden>
             <div class="wheel-stage">
-              <div class="wheel-scroll" id="arrScroll"></div>
-              <div class="wheel-band"></div>
+              <div class="wheel-scroll" id="arrScroll" role="listbox" tabindex="0" aria-label="Choose your arrival time"></div>
+              <div class="wheel-band" aria-hidden="true"></div>
             </div>
-            <div class="wheel-hint" id="arrHint"></div>
+            <div class="wheel-hint" id="arrHint" aria-live="polite"></div>
             <button type="button" class="wheel-confirm" id="arrConfirm">Set time</button>
           </div>
         </div>
@@ -470,10 +466,10 @@
           </button>
           <div class="wheel" id="depWheel" hidden>
             <div class="wheel-stage">
-              <div class="wheel-scroll" id="depScroll"></div>
-              <div class="wheel-band"></div>
+              <div class="wheel-scroll" id="depScroll" role="listbox" tabindex="0" aria-label="Choose your departure time"></div>
+              <div class="wheel-band" aria-hidden="true"></div>
             </div>
-            <div class="wheel-hint" id="depHint"></div>
+            <div class="wheel-hint" id="depHint" aria-live="polite"></div>
             <button type="button" class="wheel-confirm" id="depConfirm">Set time</button>
           </div>
         </div>
@@ -836,24 +832,29 @@ function setupWheels() {
     // Indices of the non-standard ("off") slots and the one bordering the standard band.
     const offIdx = f.slots.map((s, i) => f.off.includes(s.v) ? i : -1).filter(i => i >= 0);
     const edgeIdx = f.offSide === 'top' ? Math.max(...offIdx) : Math.min(...offIdx);
-    sc.innerHTML = '<div class="wheel-pad"></div>'
+    sc.innerHTML = '<div class="wheel-pad" aria-hidden="true"></div>'
       + f.slots.map((s, i) => {
           const cls = ['wheel-item'];
           if (f.off.includes(s.v)) { cls.push('off'); if (i === edgeIdx) cls.push(f.offSide === 'top' ? 'edge-bottom' : 'edge-top'); }
-          return `<div class="${cls.join(' ')}" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`;
+          return `<div class="${cls.join(' ')}" role="option" id="${f.scroll}-opt-${i}" aria-selected="false" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`;
         }).join('')
-      + '<div class="wheel-pad"></div>';
+      + '<div class="wheel-pad" aria-hidden="true"></div>';
     const items = $$('.wheel-item', sc);
     let tentative = 0;
     // Highlight the centered slot, but DON'T commit it — the guest must tap Confirm.
     // Crossing into the "off" zone recolors the band grey and swaps the hint to an availability note.
     const setActive = idx => {
       tentative = clamp(f, idx);
-      items.forEach((it, i) => it.classList.toggle('active', i === tentative));
+      items.forEach((it, i) => {
+        const on = i === tentative;
+        it.classList.toggle('active', on);
+        it.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      sc.setAttribute('aria-activedescendant', items[tentative].id);
       const slot = f.slots[tentative], off = f.off.includes(slot.v);
       band.classList.toggle('off', off);
       hintEl.classList.toggle('off', off);
-      hintEl.innerHTML = off ? `<span class="wh-ic">ⓘ</span>${f.offHint}` : f.stdHint;
+      hintEl.innerHTML = off ? `<span class="wh-ic" aria-hidden="true">ⓘ</span>${f.offHint}` : f.stdHint;
       confirm.textContent = 'Set ' + slot.t;
     };
     const open = () => {
@@ -862,23 +863,43 @@ function setupWheels() {
       if (idx < 0) idx = f.slots.findIndex(s => s.v === f.def);
       if (idx < 0) idx = 0;
       sc.scrollTop = idx * WHEEL_ITEM; setActive(idx);
+      sc.focus({ preventScroll: true });
       requestAnimationFrame(() => { sc.scrollTop = idx * WHEEL_ITEM; setActive(idx); });
     };
-    const close = () => { wheel.hidden = true; btn.setAttribute('aria-expanded', false); };
+    const close = returnFocus => {
+      wheel.hidden = true; btn.setAttribute('aria-expanded', false);
+      if (returnFocus) btn.focus();
+    };
+    const commit = () => {
+      state[f.key] = f.slots[tentative].v;
+      refreshTimeButtons(); wrap.classList.remove('invalid'); clearErr(f.key);
+      if (f.key === 'arrTime') renderArrNote();
+      if (f.key === 'depTime') renderDepNote();
+      renderUpsell(); save(); close(true);
+    };
     sc.addEventListener('scroll', () => setActive(Math.round(sc.scrollTop / WHEEL_ITEM)));
     sc.addEventListener('click', e => {
       const it = e.target.closest('.wheel-item'); if (!it) return;
       sc.scrollTo({ top: +it.dataset.idx * WHEEL_ITEM, behavior: 'smooth' });
     });
-    confirm.addEventListener('click', () => {
-      state[f.key] = f.slots[tentative].v;
-      refreshTimeButtons(); wrap.classList.remove('invalid'); clearErr(f.key);
-      if (f.key === 'arrTime') renderArrNote();
-      if (f.key === 'depTime') renderDepNote();
-      renderUpsell(); save(); close();
+    sc.addEventListener('keydown', e => {
+      const k = e.key;
+      if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Home' || k === 'End') {
+        e.preventDefault();
+        let idx = tentative;
+        if (k === 'ArrowDown') idx++; else if (k === 'ArrowUp') idx--;
+        else if (k === 'Home') idx = 0; else idx = f.slots.length - 1;
+        idx = clamp(f, idx);
+        sc.scrollTop = idx * WHEEL_ITEM; setActive(idx);
+      } else if (k === 'Enter' || k === ' ') {
+        e.preventDefault(); commit();
+      } else if (k === 'Escape') {
+        e.preventDefault(); e.stopPropagation(); close(true);
+      }
     });
-    btn.addEventListener('click', () => wheel.hidden ? open() : close());
-    document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
+    confirm.addEventListener('click', commit);
+    btn.addEventListener('click', () => wheel.hidden ? open() : close(false));
+    document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(false); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   });
 }
@@ -923,26 +944,43 @@ function wireContact() {
     renderSofabed(); save();
   }));
 
-  // country-code searchable dropdown
+  // country-code searchable dropdown (combobox + listbox, keyboard-navigable)
   const btn = $('#ccBtn'), panel = $('#ccPanel'), search = $('#ccSearch'), list = $('#ccList');
+  let opts = [], active = -1;
   function renderList(q = '') {
     const query = q.trim().toLowerCase();
     const items = COUNTRIES.filter(c => !query || c[0].toLowerCase().includes(query) || c[2].includes(query));
     list.innerHTML = items.length
-      ? items.map(c => `<button type="button" class="ccitem" data-iso="${c[1]}" data-dial="${c[2]}"><span class="flag">${flagOf(c[1])}</span><span class="nm">${c[0]}</span><span class="dl">${c[2]}</span></button>`).join('')
+      ? items.map((c, i) => `<button type="button" class="ccitem" role="option" id="cc-opt-${i}" tabindex="-1" aria-selected="${c[1] === state.iso}" data-iso="${c[1]}" data-dial="${c[2]}"><span class="flag" aria-hidden="true">${flagOf(c[1])}</span><span class="nm">${c[0]}</span><span class="dl">${c[2]}</span></button>`).join('')
       : '<div class="ccempty">No matches</div>';
+    opts = $$('.ccitem', list);
+    setActiveOpt(opts.length ? 0 : -1);
   }
-  function open()  { panel.hidden = false; btn.setAttribute('aria-expanded', true); search.value = ''; renderList(); search.focus(); }
-  function close() { panel.hidden = true;  btn.setAttribute('aria-expanded', false); }
-  btn.addEventListener('click', () => panel.hidden ? open() : close());
-  search.addEventListener('input', () => renderList(search.value));
-  list.addEventListener('click', e => {
-    const it = e.target.closest('.ccitem'); if (!it) return;
+  function setActiveOpt(i) {
+    active = i;
+    opts.forEach((o, idx) => o.classList.toggle('kbd', idx === i));
+    if (i >= 0) { search.setAttribute('aria-activedescendant', opts[i].id); opts[i].scrollIntoView({ block: 'nearest' }); }
+    else search.removeAttribute('aria-activedescendant');
+  }
+  function choose(it) {
+    if (!it) return;
     state.iso = it.dataset.iso; state.cc = it.dataset.dial;
-    applyCc(); close(); save();
+    applyCc(); save(); close(true);
+  }
+  function open()  { panel.hidden = false; btn.setAttribute('aria-expanded', true); search.setAttribute('aria-expanded', true); search.value = ''; renderList(); search.focus(); }
+  function close(returnFocus) { panel.hidden = true; btn.setAttribute('aria-expanded', false); search.setAttribute('aria-expanded', false); if (returnFocus) btn.focus(); }
+  btn.addEventListener('click', () => panel.hidden ? open() : close(false));
+  search.addEventListener('input', () => renderList(search.value));
+  search.addEventListener('keydown', e => {
+    const k = e.key;
+    if (k === 'ArrowDown') { e.preventDefault(); if (opts.length) setActiveOpt(Math.min(active + 1, opts.length - 1)); }
+    else if (k === 'ArrowUp') { e.preventDefault(); if (opts.length) setActiveOpt(Math.max(active - 1, 0)); }
+    else if (k === 'Enter') { e.preventDefault(); choose(opts[active]); }
+    else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
   });
-  document.addEventListener('click', e => { if (!$('#phoneWrap').contains(e.target)) close(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  list.addEventListener('click', e => { choose(e.target.closest('.ccitem')); });
+  document.addEventListener('click', e => { if (!$('#phoneWrap').contains(e.target)) close(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(false); });
 }
 
 /* ---- Guests ---- */
