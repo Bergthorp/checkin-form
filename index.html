@@ -126,6 +126,8 @@
 
   /* ---------- Upload button ---------- */
   .uplabel { display: block; font-size: 14px; color: var(--label); margin-bottom: 10px; }
+  .qlabel { display: block; font-size: 16px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
+  .q + .q { margin-top: 30px; }
   .upbtn {
     display: inline-block; background: var(--mint); color: var(--teal);
     font-weight: 700; font-size: 15px; padding: 13px 26px;
@@ -241,6 +243,26 @@
     <!-- ===== Guests ===== -->
     <div id="guests"></div>
 
+    <hr class="divider" />
+
+    <!-- ===== Additional info ===== -->
+    <div class="guest" id="addInfo">
+      <div class="guest-head">
+        <h2>Additional info</h2>
+        <span class="chev">⌃</span>
+      </div>
+      <div class="guest-body">
+        <div class="q">
+          <label class="qlabel">Need parking? Please enter your full vehicle plate details (code + number) for garage access. Don’t have them yet? Type “Later” and send them before arrival. No parking? Type “No parking.”</label>
+          <input type="text" id="parking" placeholder="Your answer here" />
+        </div>
+        <div class="q">
+          <label class="qlabel">Would you like the sofa bed prepared for sleeping when you arrive?</label>
+          <input type="text" id="sofabed" placeholder="Your answer here" />
+        </div>
+      </div>
+    </div>
+
     <div class="submitwrap">
       <button class="submit" id="submitBtn">Submit check-in</button>
     </div>
@@ -315,6 +337,9 @@ function renderGuests() {
 }
 renderGuests();
 
+/* ---- Additional info accordion ---- */
+$('#addInfo .guest-head').addEventListener('click', () => $('#addInfo').classList.toggle('collapsed'));
+
 /* ---- Submit ---- */
 $('#submitBtn').addEventListener('click', () => {
   const payload = {
@@ -323,7 +348,9 @@ $('#submitBtn').addEventListener('click', () => {
     arrival: $('#arrTime').value + ' ' + state.arrAmpm,
     departure: $('#depTime').value + ' ' + state.depAmpm,
     arriveBy: $('#arriveBy').value,
-    guests: guestNames
+    guests: guestNames,
+    parking: $('#parking').value,
+    sofaBed: $('#sofabed').value
   };
   console.log('CHECK-IN SUBMITTED →', payload);
   $('#tState').textContent = 'submitted ✓ (see console)';
