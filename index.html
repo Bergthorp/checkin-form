@@ -55,21 +55,20 @@
   .field { margin-bottom: 4px; }
   label.lbl { display: block; font-size: 14px; color: var(--label); margin-bottom: 8px; }
   .note { font-size: 14px; color: var(--text-soft); margin-top: -18px; margin-bottom: 16px; }
-  .counter {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
-    padding: 14px 18px; margin-bottom: 16px;
+  .guest-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .guest-top .guest-name { margin-bottom: 0; }
+  .guest-remove {
+    background: none; border: none; padding: 0; cursor: pointer;
+    font-size: 13px; color: var(--text-soft); text-decoration: underline;
   }
-  .counter-label { font-size: 16px; font-weight: 600; color: var(--teal); }
-  .stepper { display: flex; align-items: center; gap: 6px; }
-  .stepper button {
-    width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--teal-line);
-    background: var(--mint); color: var(--teal); font-size: 22px; font-weight: 700;
-    line-height: 1; cursor: pointer; transition: background .15s, opacity .15s;
+  .guest-remove:hover { color: var(--asterisk); }
+  .addguest {
+    display: inline-block; background: #fff; color: var(--teal);
+    border: 1.5px solid var(--teal-line); border-radius: 999px;
+    padding: 12px 22px; font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background .15s; margin-top: 4px;
   }
-  .stepper button:hover { background: var(--mint-hover); }
-  .stepper button:disabled { opacity: .35; cursor: not-allowed; }
-  .stepper #guestCount { min-width: 32px; text-align: center; font-size: 19px; font-weight: 700; color: var(--teal); }
+  .addguest:hover { background: var(--mint); }
   .trust {
     display: flex; align-items: flex-start; gap: 8px;
     font-size: 13px; color: var(--text-soft); line-height: 1.5; margin-bottom: 8px;
@@ -374,17 +373,10 @@
       <section>
         <h2>Guest IDs <span class="req">*</span></h2>
         <div class="note">Upload a clear photo of each guest’s passport or ID — that’s all we need.</div>
-        <div class="counter">
-          <span class="counter-label">How many guests are staying?</span>
-          <div class="stepper">
-            <button type="button" id="guestMinus" aria-label="Remove a guest">−</button>
-            <span id="guestCount">2</span>
-            <button type="button" id="guestPlus" aria-label="Add a guest">+</button>
-          </div>
-        </div>
         <div class="trust"><span class="trust-ic" aria-hidden="true">🔒</span>Your ID is only used to verify your check-in and is stored securely — we never share it.</div>
       </section>
       <div id="guests"></div>
+      <button type="button" class="addguest" id="addGuestBtn">+ Add another guest</button>
 
       <hr class="divider" />
 
@@ -676,13 +668,19 @@ function renderGuests() {
     const block = document.createElement('div');
     block.className = 'guest';
     block.innerHTML = `
-      <h3 class="guest-name">Guest ${i + 1}</h3>
+      <div class="guest-top">
+        <h3 class="guest-name">Guest ${i + 1}</h3>
+        ${state.guests.length > 1 ? '<button type="button" class="guest-remove">Remove</button>' : ''}
+      </div>
       <label class="upbtn">Upload ID<input type="file" accept="image/*" /></label>
       <div class="err" data-gerr="idPhoto">Please upload a photo of this guest’s ID.</div>
       <div class="uppreview">
         <img alt="ID preview" />
         <div><div class="nm"></div><span class="rm">Remove</span></div>
       </div>`;
+
+    const removeBtn = $('.guest-remove', block);
+    if (removeBtn) removeBtn.addEventListener('click', () => removeGuest(i));
 
     // file upload + preview
     const fileInp = $('input[type=file]', block);
@@ -709,23 +707,21 @@ function renderGuests() {
     if (i < state.guests.length - 1)
       guestsEl.appendChild(Object.assign(document.createElement('hr'), { className: 'divider' }));
   });
-  refreshGuestCount();
+  $('#addGuestBtn').hidden = state.guests.length >= MAX_GUESTS;
 }
 
 const MAX_GUESTS = 10;
-function refreshGuestCount() {
-  $('#guestCount').textContent = state.guests.length;
-  $('#guestMinus').disabled = state.guests.length <= 1;
-  $('#guestPlus').disabled = state.guests.length >= MAX_GUESTS;
-}
-function setGuestCount(n) {
-  n = Math.max(1, Math.min(MAX_GUESTS, n));
-  while (state.guests.length < n) state.guests.push({ idPhoto: '', idPreview: '' });
-  while (state.guests.length > n) state.guests.pop();
+function addGuest() {
+  if (state.guests.length >= MAX_GUESTS) return;
+  state.guests.push({ idPhoto: '', idPreview: '' });
   save(); renderGuests();
 }
-$('#guestMinus').addEventListener('click', () => setGuestCount(state.guests.length - 1));
-$('#guestPlus').addEventListener('click', () => setGuestCount(state.guests.length + 1));
+function removeGuest(i) {
+  if (state.guests.length <= 1) return;
+  state.guests.splice(i, 1);
+  save(); renderGuests();
+}
+$('#addGuestBtn').addEventListener('click', addGuest);
 
 /* ---- Validation ---- */
 function showErr(id)  { const e = $(`.err[data-for="${id}"]`); if (e) e.classList.add('show'); }
