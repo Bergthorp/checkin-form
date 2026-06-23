@@ -342,6 +342,8 @@
   .up-total .up-k { font-weight: 800; }
   .up-total .up-v { font-weight: 800; color: #b4521f; font-size: 17px; }
   .up-note { font-size: 12.5px; color: var(--text-soft); margin-top: 10px; }
+  .pay-note { font-size: 12.5px; color: var(--text-soft); text-align: center; margin-top: 14px; }
+  .pay-note[hidden] { display: none; }
 
   /* ---------- Simulated Stripe payment ---------- */
   #payView[hidden] { display: none; }
@@ -693,6 +695,7 @@
 
       <div class="submitwrap">
         <button class="submit" id="finishBtn">Complete check-in</button>
+        <div class="pay-note" id="payNote" hidden>Charged securely via Stripe when you complete check-in.</div>
       </div>
     </div>
 
@@ -1373,12 +1376,16 @@ function renderOrderSummary() {
   if (state.earlyCheckin) rows.push(row('Early check-in · ' + optLabel(EARLY_OPTS, state.earlyCheckin), optPrice(EARLY_OPTS, state.earlyCheckin)));
   if (state.lateCheckout) rows.push(row('Late check-out · ' + optLabel(LATE_OPTS, state.lateCheckout), optPrice(LATE_OPTS, state.lateCheckout)));
   if (state.damageWaiver === 'waiver') rows.push(row('Damage waiver', WAIVER_PRICE));
-  if (rows.length) {
+  // The itemized summary earns its space only when there's a breakdown to show — an early/late
+  // upgrade or more than one item. A waiver-only order just repeats the card price + the button, so skip it.
+  const showSummary = rows.length > 1 || !!(state.earlyCheckin || state.lateCheckout);
+  if (showSummary) {
     list.innerHTML = rows.join('') + `<div class="up-row up-total"><span class="up-k">Total due today</span><span class="up-v">$${total}</span></div>`;
     box.hidden = false;
   } else {
     box.hidden = true;
   }
+  $('#payNote').hidden = !(total > 0 && !showSummary);   // keep the Stripe reassurance when the summary is hidden
   $('#finishBtn').textContent = total > 0 ? `Pay $${total} & complete check-in` : 'Complete check-in';
 }
 function showExtrasView() {
