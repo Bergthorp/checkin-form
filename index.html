@@ -505,8 +505,8 @@
     <!-- ===================== FORM ===================== -->
     <div id="formView">
       <div class="brand">
-        <img class="brand-mark" src="logo-mark.png" alt="" width="52" height="52" />
-        <h1>Desert Key Check-In Form</h1>
+        <img class="brand-mark" id="brandMark" src="logo-mark.png" alt="" width="52" height="52" />
+        <h1 id="brandTitle">Desert Key Check-In Form</h1>
       </div>
 
       <!-- Contact details -->
@@ -595,22 +595,23 @@
         </div>
       </section>
 
-      <hr class="divider" />
-
-      <!-- Guests -->
-      <section>
-        <h2>Upload Guest IDs <span class="req">*</span></h2>
-        <div class="note">A clear photo of each guest’s passport or ID.</div>
-        <div class="trust"><span class="trust-ic" aria-hidden="true">🔒</span>Required by UAE law · stored securely · never shared.</div>
-      </section>
-      <div id="guests"></div>
-      <button type="button" class="addguest" id="addGuestBtn">+ Add another guest</button>
+      <!-- Guests (ID upload) — market-gated -->
+      <div id="idBlock">
+        <hr class="divider" />
+        <section>
+          <h2>Upload Guest IDs <span class="req">*</span></h2>
+          <div class="note">A clear photo of each guest’s passport or ID.</div>
+          <div class="trust"><span class="trust-ic" aria-hidden="true">🔒</span>Required by UAE law · stored securely · never shared.</div>
+        </section>
+        <div id="guests"></div>
+        <button type="button" class="addguest" id="addGuestBtn">+ Add another guest</button>
+      </div>
 
       <hr class="divider" />
 
       <!-- Additional info -->
       <section id="addInfo">
-        <div class="q">
+        <div class="q" id="parkingQ">
           <h2>Are you bringing a car?</h2>
           <div class="yn" id="parkingToggle" role="group" aria-label="Parking">
             <button type="button" class="yn-btn" data-val="yes">Yes</button>
@@ -789,7 +790,7 @@
       <h1>You’re all checked in!</h1>
       <div class="sub">We’ve received your details. Your arrival instructions will be sent before check-in.</div>
       <div class="done-card">
-        <div class="row"><span class="k">Guests</span><span class="v" id="doneGuests">—</span></div>
+        <div class="row" id="doneGuestsRow"><span class="k">Guests</span><span class="v" id="doneGuests">—</span></div>
         <div class="row"><span class="k">Arrival</span><span class="v" id="doneArr">—</span></div>
         <div class="row"><span class="k">Departure</span><span class="v" id="doneDep">—</span></div>
         <div class="row"><span class="k">Damage protection</span><span class="v" id="doneWaiver">—</span></div>
@@ -798,7 +799,7 @@
       <div class="done-manage">
         <div class="dm-q">Plans changed?</div>
         <div class="dm-sub">Extend, shorten, or adjust your stay anytime on our site.</div>
-        <a class="manage-btn" href="https://desertkey.ae" target="_blank" rel="noopener">Manage your booking →</a>
+        <a class="manage-btn" id="manageBtn" href="https://desertkey.ae" target="_blank" rel="noopener">Manage your booking →</a>
       </div>
     </div>
 
@@ -881,9 +882,33 @@ const COUNTRIES = [
 ];
 function flagOf(iso) { return iso.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0))); }
 
+/* ---- Market config (one form, switched by ?m=ae | ?m=is) ----
+   Markets share ~everything (times, paid upgrades, waiver, Stripe sim).
+   Only branding, default dial code, and a couple of sections differ.
+   Add a 3rd market by adding a key here — no other code changes needed. */
+const MARKETS = {
+  ae: {
+    docTitle:   'Desert Key Check-In',
+    brandTitle: 'Desert Key Check-In Form',
+    logo:       'logo-mark.png',
+    iso: 'AE',  cc: '+971',
+    idUpload: true,  parking: true,
+    manageUrl: 'https://desertkey.ae'
+  },
+  is: {
+    docTitle:   'Iceland Check-In',
+    brandTitle: 'Iceland Check-In Form',   // TODO: real Iceland brand name
+    logo:       'logo-mark.png',           // TODO: Iceland logo asset
+    iso: 'IS',  cc: '+354',
+    idUpload: false, parking: false,
+    manageUrl: 'https://desertkey.ae'      // TODO: Iceland manage-booking URL
+  }
+};
+const MARKET = MARKETS[(new URLSearchParams(location.search).get('m') || '').toLowerCase()] || MARKETS.ae;
+
 /* ---- State ---- */
 const state = {
-  email: '', iso: 'AE', cc: '+971', phone: '',
+  email: '', iso: MARKET.iso, cc: MARKET.cc, phone: '',
   arrTime: '', depTime: '',
   earlyCheckin: '', lateCheckout: '',
   damageWaiver: '',   // neutral default — guest must actively pick waiver or decline (no pre-charge)
@@ -1314,10 +1339,12 @@ function validate() {
   // arrival / departure time
   if (!state.arrTime) { $('#arrField').classList.add('invalid'); showErr('arrTime'); fail($('#arrField')); }
   if (!state.depTime) { $('#depField').classList.add('invalid'); showErr('depTime'); fail($('#depField')); }
-  // guests — ID photo only
-  $$('.guest').forEach((block, i) => {
-    if (!state.guests[i].idPhoto) { $('.err[data-gerr="idPhoto"]', block).classList.add('show'); fail(block); }
-  });
+  // guests — ID photo only (markets that don't collect IDs skip this)
+  if (MARKET.idUpload) {
+    $$('.guest').forEach((block, i) => {
+      if (!state.guests[i].idPhoto) { $('.err[data-gerr="idPhoto"]', block).classList.add('show'); fail(block); }
+    });
+  }
 
   return firstBad;
 }
@@ -1325,7 +1352,7 @@ function validate() {
 /* ---- Submit ---- */
 function finalizeCheckin(paidAmount) {
   console.log('CHECK-IN SUBMITTED →', JSON.parse(JSON.stringify(state)), 'paid:', paidAmount);
-  $('#doneGuests').textContent = state.guests.length;
+  if (MARKET.idUpload) $('#doneGuests').textContent = state.guests.length;
   $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
   $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
   $('#doneWaiver').textContent = state.damageWaiver === 'waiver' ? 'Damage waiver added' : 'Declined';
@@ -1452,16 +1479,19 @@ function wireExtras() {
 
 /* ===== TEST TOOLBAR (delete for prod) ===== */
 $('#tFill').addEventListener('click', () => {
-  state.email = 'ahmed.karim@email.com'; state.iso = 'IS'; state.cc = '+354'; state.phone = '555 1234';
+  state.email = 'ahmed.karim@email.com'; state.iso = MARKET.iso; state.cc = MARKET.cc; state.phone = '555 1234';
   state.arrTime = '13:00'; state.depTime = '13:00';        // honest pre-3 PM / post-11 AM times
   state.earlyCheckin = '13:00'; state.lateCheckout = '13:00';  // both paid upgrades added
   state.damageWaiver = 'waiver';      // step-2 add-on
-  state.parking = 'yes'; state.plate = 'A 12345'; state.sofaBed = 'yes';
-  state.guests.forEach((g) => {
-    g.idPhoto = 'passport_demo.jpg';
-    g.idPreview = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23cdeee1"/><text x="32" y="38" font-size="10" text-anchor="middle" fill="%230e4f4a">ID</text></svg>');
-  });
-  save(); fillContactValues(); renderGuests();
+  state.sofaBed = 'yes';
+  if (MARKET.parking) { state.parking = 'yes'; state.plate = 'A 12345'; }
+  if (MARKET.idUpload) {
+    state.guests.forEach((g) => {
+      g.idPhoto = 'passport_demo.jpg';
+      g.idPreview = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23cdeee1"/><text x="32" y="38" font-size="10" text-anchor="middle" fill="%230e4f4a">ID</text></svg>');
+    });
+  }
+  save(); fillContactValues(); if (MARKET.idUpload) renderGuests();
   $('#tState').textContent = 'autofilled ✓';
 });
 $('#tAddGuest').addEventListener('click', () => {
@@ -1471,12 +1501,27 @@ $('#tAddGuest').addEventListener('click', () => {
 $('#tExtras').addEventListener('click', showExtrasView);
 $('#tReset').addEventListener('click', () => { localStorage.removeItem(LS_KEY); location.reload(); });
 
+/* ---- Apply the active market: branding + show/hide gated sections ---- */
+function applyMarket() {
+  document.title = MARKET.docTitle;
+  $('#brandTitle').textContent = MARKET.brandTitle;
+  $('#brandMark').src = MARKET.logo;
+  $('#manageBtn').href = MARKET.manageUrl;
+  if (!MARKET.idUpload) {
+    $('#idBlock').hidden = true;
+    $('#doneGuestsRow').hidden = true;
+    state.guests = [];   // nothing to collect → keep the payload clean
+  }
+  if (!MARKET.parking) $('#parkingQ').hidden = true;
+}
+
 /* ---- Init ---- */
 load();
+applyMarket();
 fillContactValues();
 wireContact();
 wireExtras();
-renderGuests();
+if (MARKET.idUpload) renderGuests();
 </script>
 </body>
 </html>
