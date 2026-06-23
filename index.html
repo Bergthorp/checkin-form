@@ -664,7 +664,7 @@
               <span class="opt-name">Damage waiver</span>
               <span class="badge-popular">Most Popular</span>
             </div>
-            <div class="opt-price"><b>$68</b> one-time fee</div>
+            <div class="opt-price"><b>$89</b> one-time fee</div>
             <ul class="opt-features">
               <li>Covers accidental damage up to $5,000</li>
               <li>Non-refundable, no deposit needed</li>
@@ -714,7 +714,7 @@
           <h4>Damage Waiver Agreement</h4>
           <p>Thank you for choosing us for your stay. To enhance your experience and offer peace of mind, we provide a Damage Waiver option. This waiver covers reported incidental damage to the property during your stay, ensuring that minor mishaps don’t disrupt your visit or your finances.</p>
           <h4>Waiver Fee</h4>
-          <ul><li>A non-refundable fee of $68 is applied to your stay, regardless of length of stay.</li></ul>
+          <ul><li>A non-refundable fee of $89 is applied to your stay, regardless of length of stay.</li></ul>
           <h4>Procedure for Reporting Damages</h4>
           <ul>
             <li>Please report any damages that occur during your stay to the management as soon as possible.</li>
@@ -934,7 +934,7 @@ function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? 
 const EARLY_OPTS = [ { v: '13:00', t: '1:00 PM', price: 138 }, { v: '14:00', t: '2:00 PM', price: 98 } ];
 const LATE_OPTS  = [ { v: '12:00', t: '12:00 PM', price: 98 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
 // Step-2 add-ons. Damage waiver is a flat one-time fee regardless of stay length.
-const WAIVER_PRICE = 68;
+const WAIVER_PRICE = 89;
 function optPrice(opts, v) { const o = opts.find(x => x.v === v); return o && o.price ? o.price : 0; }
 function optLabel(opts, v) { const o = opts.find(x => x.v === v); return o ? o.t : ''; }
 function earlyLateTotal() { return optPrice(EARLY_OPTS, state.earlyCheckin) + optPrice(LATE_OPTS, state.lateCheckout); }
