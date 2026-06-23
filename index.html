@@ -57,7 +57,10 @@
   .req { color: var(--asterisk); margin-left: 2px; }
 
   section { margin-bottom: 40px; }
-  section.reveal { animation: revealSection .35s ease both; }
+  /* fill-mode "backwards" (not "both"): the section starts hidden, then reverts to its
+     natural style after the animation. "both" would keep transform:translateY(0) — a
+     non-none transform that creates a stacking context and traps an open wheel's z-index. */
+  section.reveal { animation: revealSection .35s ease backwards; }
   @keyframes revealSection {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -950,11 +953,11 @@ const DEP_LATE  = ['12:00', '13:00'];                      // after 11 AM → la
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
 const WHEEL_ITEM = 48;
 const TIME_FIELDS = [
-  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal', confirm: 'arrConfirm', hint: 'arrHint', def: '15:00',
+  { key: 'arrTime', slots: ARR_SLOTS, field: 'arrField', btn: 'arrBtn', wheel: 'arrWheel', scroll: 'arrScroll', val: 'arrVal', confirm: 'arrConfirm', hint: 'arrHint', note: 'arrNote', def: '15:00',
     off: ARR_EARLY, offSide: 'top',
     stdHint: 'Your apartment is ready from 3:00 PM.',
-    offHint: 'Early check-in is subject to availability — bag drop is always free.' },
-  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal', confirm: 'depConfirm', hint: 'depHint', def: '11:00',
+    offHint: 'Early check-in is subject to availability on the day.' },
+  { key: 'depTime', slots: DEP_SLOTS, field: 'depField', btn: 'depBtn', wheel: 'depWheel', scroll: 'depScroll', val: 'depVal', confirm: 'depConfirm', hint: 'depHint', note: 'depNote', def: '11:00',
     off: DEP_LATE, offSide: 'bottom',
     stdHint: 'Check-out is by 11:00 AM.',
     offHint: 'Late check-out is subject to availability.' }
@@ -996,7 +999,7 @@ function renderArrNote() {
       offer.innerHTML = '<button type="button" class="ctx-remove" id="arrRemove">Remove</button>';
       $('#arrRemove').onclick = () => { state.earlyCheckin = ''; renderArrNote(); renderUpsell(); save(); };
     } else {
-      text.textContent = 'Your apartment is guaranteed ready from 3:00 PM — you’re welcome to drop bags off earlier. Want it guaranteed from 1:00 PM?';
+      text.textContent = 'Your apartment is guaranteed ready from 3:00 PM. Want it guaranteed from 1:00 PM?';
       offer.innerHTML = `<button type="button" class="ctx-add" id="arrAdd">Guarantee 1:00 PM <span class="ctx-price">+$${GUARANTEE.price}</span></button>`;
       $('#arrAdd').onclick = () => { state.earlyCheckin = GUARANTEE.v; renderArrNote(); renderUpsell(); save(); };
     }
@@ -1084,6 +1087,9 @@ function setupWheels() {
     };
     const open = () => {
       wheel.hidden = false; btn.setAttribute('aria-expanded', true);
+      // Hide this field's contextual offer/note while choosing: the absolutely-positioned
+      // dial floats over it, and a note tied to the *old* time is stale while re-picking.
+      $('#' + f.note).hidden = true;
       let idx = f.slots.findIndex(s => s.v === state[f.key]);
       if (idx < 0) idx = f.slots.findIndex(s => s.v === f.def);
       if (idx < 0) idx = 0;
@@ -1100,6 +1106,8 @@ function setupWheels() {
     };
     const close = returnFocus => {
       wheel.hidden = true; btn.setAttribute('aria-expanded', false);
+      // Restore the contextual note for the current (possibly unchanged) time.
+      if (f.key === 'arrTime') renderArrNote(); else if (f.key === 'depTime') renderDepNote();
       if (returnFocus) btn.focus();
     };
     const commit = () => {
