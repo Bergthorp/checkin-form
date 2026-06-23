@@ -170,6 +170,7 @@
   .timefield.invalid .timebtn { border-color: var(--asterisk); }
   .timeval.placeholder { color: var(--text-soft); font-weight: 600; }
   .timebtn .tarrow { color: var(--text-soft); font-size: 11px; }
+  .timehint { font-size: 12.5px; color: var(--text-soft); margin: 10px 2px 0; }
 
   .wheel {
     position: absolute; z-index: 50; top: calc(100% + 8px); left: 0; right: 0;
@@ -555,6 +556,7 @@
             <button type="button" class="wheel-confirm" id="arrConfirm">Set time</button>
           </div>
         </div>
+        <p class="timehint">You can update this anytime before you arrive.</p>
         <div class="err" data-for="arrTime">Please choose your arrival time.</div>
       </section>
 
@@ -654,7 +656,7 @@
 
       <!-- Damage deposit / waiver -->
       <section>
-        <div class="opt-card waiver selected" id="waiverCard" role="button" tabindex="0" aria-pressed="true">
+        <div class="opt-card waiver" id="waiverCard" role="button" tabindex="0" aria-pressed="false">
           <span class="opt-radio" aria-hidden="true"></span>
           <div class="opt-main">
             <div class="opt-head">
@@ -684,6 +686,7 @@
             <div class="opt-decline-sub">I accept responsibility for any accidental damages</div>
           </div>
         </div>
+        <div class="err" id="waiverErr">Please choose one option to continue.</div>
       </section>
 
       <!-- Order summary -->
@@ -883,7 +886,7 @@ const state = {
   email: '', iso: 'AE', cc: '+971', phone: '',
   arrTime: '', depTime: '',
   earlyCheckin: '', lateCheckout: '',
-  damageWaiver: 'waiver',
+  damageWaiver: '',   // neutral default — guest must actively pick waiver or decline (no pre-charge)
   parking: '', plate: '', sofaBed: '',
   guests: [
     { idPhoto: '', idPreview: '' },
@@ -1376,11 +1379,11 @@ $('#payBtn').addEventListener('click', () => {
 /* ===== STEP 2 — optional extras (damage waiver) ===== */
 function renderExtras() {
   // Damage waiver vs decline (mutually exclusive)
-  const wv = state.damageWaiver === 'waiver';
+  const wv = state.damageWaiver === 'waiver', dc = state.damageWaiver === 'decline';
   $('#waiverCard').classList.toggle('selected', wv);
   $('#waiverCard').setAttribute('aria-pressed', wv);
-  $('#declineCard').classList.toggle('selected', !wv);
-  $('#declineCard').setAttribute('aria-pressed', !wv);
+  $('#declineCard').classList.toggle('selected', dc);
+  $('#declineCard').setAttribute('aria-pressed', dc);
   renderOrderSummary();
 }
 function renderOrderSummary() {
@@ -1416,7 +1419,7 @@ function showFormView() {
   $('#tState').textContent = 'step 1 — details';
 }
 function wireExtras() {
-  const setWaiver = v => { state.damageWaiver = v; renderExtras(); save(); };
+  const setWaiver = v => { state.damageWaiver = v; $('#waiverErr').classList.remove('show'); renderExtras(); save(); };
   $('#waiverCard').addEventListener('click', e => { if (e.target.closest('#termsOpen')) return; setWaiver('waiver'); });
   $('#declineCard').addEventListener('click', () => setWaiver('decline'));
   [['#waiverCard', 'waiver'], ['#declineCard', 'decline']].forEach(([sel, v]) => {
@@ -1433,6 +1436,12 @@ function wireExtras() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !terms.hidden) terms.hidden = true; });
   // Finish → pay (if anything due) or straight to confirmation
   $('#finishBtn').addEventListener('click', () => {
+    if (!state.damageWaiver) {   // require an explicit waiver/decline choice — no silent default
+      const err = $('#waiverErr');
+      err.classList.add('show');
+      err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     const total = totalPrice();
     if (total > 0) openPay(total); else finalizeCheckin(0);
   });
