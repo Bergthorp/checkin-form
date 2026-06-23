@@ -247,7 +247,6 @@
   .uppreview .rm { font-size: 13px; color: var(--text-soft); cursor: pointer; text-decoration: underline; }
 
   /* ---------- Question prompts ---------- */
-  .qlabel { display: block; font-size: 16px; color: var(--text); margin-bottom: 14px; line-height: 1.5; }
   .qhint { font-size: 13px; color: var(--text-soft); line-height: 1.5; margin: -8px 0 12px; }
   .q + .q { margin-top: 30px; }
   .optional { font-size: 14px; font-weight: 500; color: var(--text-soft); }
@@ -618,11 +617,11 @@
           </div>
           <div id="plateWrap" hidden>
             <div class="qhint">Add your plate now if you have it — or just send it to us anytime before you arrive. No rush.</div>
-            <input type="text" id="plate" placeholder="Plate number (optional)" />
+            <input type="text" id="plate" placeholder="Code + plate number (optional)" />
           </div>
         </div>
         <div class="q">
-          <label class="qlabel">Would you like the sofa bed prepared for sleeping?</label>
+          <h2>Would you like the sofa bed prepared for sleeping?</h2>
           <div class="yn" id="sofabedToggle" role="group" aria-label="Sofa bed">
             <button type="button" class="yn-btn" data-val="yes">Yes</button>
             <button type="button" class="yn-btn" data-val="no">No</button>
