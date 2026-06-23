@@ -204,6 +204,7 @@
     font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
     white-space: nowrap;
   }
+  .wheel-tag.tag-early { background: #d9efe9; color: #0e4f4a; }
   .wheel-band {
     position: absolute; left: 12px; right: 12px; top: 50%; height: 48px;
     transform: translateY(-50%); border-radius: 10px;
@@ -903,11 +904,10 @@ function load() {
 
 /* ---- Time chips (no default — guest must choose) ---- */
 const ARR_SLOTS = [
-  { v: 'early', t: 'Before 12 PM' },
-  { v: '12:00', t: '12:00 PM' },
-  { v: '13:00', t: '1:00 PM' },
-  { v: '14:00', t: '2:00 PM' },
-  { v: '15:00', t: '3:00 PM', tag: 'Standard' },
+  { v: 'early', t: 'Early morning', tag: 'Check availability', offHint: 'Early morning check-in is subject to availability.', confirm: 'Early morning — check availability' },
+  { v: '13:00', t: '1:00 PM', tag: 'Early check-in', tagClass: 'tag-early', price: 138, offHint: '1:00 PM check-in costs $138.' },
+  { v: '14:00', t: '2:00 PM', tag: 'Early check-in', tagClass: 'tag-early', price: 138, offHint: '2:00 PM check-in costs $138.' },
+  { v: '15:00', t: '3:00 PM' },
   { v: '16:00', t: '4:00 PM' },
   { v: '17:00', t: '5:00 PM' },
   { v: '18:00', t: '6:00 PM' },
@@ -937,7 +937,8 @@ function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? 
    quiet, optional offer to guarantee early access / late stay. Flat price, no calendar.
    GUARANTEE is the single fixed product; earlyCheckin/lateCheckout hold '' or its value. */
 const GUARANTEE = { v: '13:00', t: '1:00 PM', price: 138 };
-const EARLY_OPTS = [ GUARANTEE ];   // kept so the upgrade summary helpers below resolve label/price
+// Arrival now sells the early time itself: picking 1 PM or 2 PM buys a $138 guaranteed-ready slot.
+const EARLY_OPTS = [ { v: '13:00', t: '1:00 PM', price: 138 }, { v: '14:00', t: '2:00 PM', price: 138 } ];
 const LATE_OPTS  = [ GUARANTEE ];
 // Step-2 add-ons (flat prices for the prototype; waiver would be $29/night capped at $200 in prod).
 const WAIVER_PRICE = 58;
@@ -948,8 +949,9 @@ function waiverPrice() { return state.damageWaiver === 'waiver' ? WAIVER_PRICE :
 function totalPrice()  { return earlyLateTotal() + waiverPrice(); }
 
 // Which arrival/departure values trigger which contextual reaction.
-const ARR_EARLY = ['early', '12:00', '13:00', '14:00'];   // before 3 PM → expectation + early-access offer
-const ARR_LATE  = ['00:00', 'late'];                       // after midnight → self-check-in reassurance
+const ARR_EARLY  = ['early', '13:00', '14:00'];   // before 3 PM → grey "off" zone in the wheel
+const ARR_PRICED = ['13:00', '14:00'];            // picking these directly buys the $138 early check-in
+const ARR_LATE   = ['00:00', 'late'];             // after midnight → self-check-in reassurance
 const DEP_LATE  = ['12:00', '13:00'];                      // after 11 AM → late check-out offer
 
 /* ---- Time wheel pickers (one tap → scrollable dial, no default) ---- */
@@ -986,26 +988,30 @@ function refreshTimeButtons() {
 function renderArrNote() {
   const sec = $('#arrNote'), box = $('#arrNoteBox'), text = $('#arrNoteText'), offer = $('#arrOffer');
   const v = state.arrTime;
-  const isEarly = ARR_EARLY.includes(v), isLate = ARR_LATE.includes(v);
-  if (!isEarly) state.earlyCheckin = '';   // upgrade only valid for a pre-3 PM arrival
-  if (!v || (!isEarly && !isLate)) { sec.hidden = true; return; }
+  const isPriced = ARR_PRICED.includes(v);   // 1 PM / 2 PM — picking the time buys it
+  const isAvail  = v === 'early';            // early morning — request, priced day-before
+  const isLate   = ARR_LATE.includes(v);
+  // Keep earlyCheckin in sync with the chosen time (the time IS the paid product).
+  state.earlyCheckin = isPriced ? v : '';
+  if (!v || (!isPriced && !isAvail && !isLate)) { sec.hidden = true; return; }
   sec.hidden = false; sec.classList.add('reveal');
-  if (isLate) {
+  if (isPriced) {
+    box.classList.add('is-offer');
+    text.textContent = `Early check-in added — your apartment is guaranteed ready from ${timeLabel(ARR_SLOTS, v)}.`;
+    offer.innerHTML = '<button type="button" class="ctx-remove" id="arrRemove">Remove</button>';
+    $('#arrRemove').onclick = () => {
+      state.arrTime = '15:00'; state.earlyCheckin = '';
+      refreshTimeButtons(); renderArrNote(); renderUpsell(); save();
+    };
+    offer.hidden = false;
+  } else if (isAvail) {
+    box.classList.remove('is-offer');
+    text.textContent = 'Early morning check-in is subject to availability. We’ll confirm if it’s possible — and the price — the day before you arrive.';
+    offer.hidden = true;
+  } else {
     box.classList.remove('is-offer');
     text.textContent = 'No problem — check-in is fully self-service. We’ll send your door code and directions before you arrive, so you can get in whenever you land.';
     offer.hidden = true;
-  } else {
-    box.classList.add('is-offer');
-    if (state.earlyCheckin) {
-      text.textContent = 'Early check-in added — your apartment is guaranteed ready from 1:00 PM.';
-      offer.innerHTML = '<button type="button" class="ctx-remove" id="arrRemove">Remove</button>';
-      $('#arrRemove').onclick = () => { state.earlyCheckin = ''; renderArrNote(); renderUpsell(); save(); };
-    } else {
-      text.textContent = 'Your apartment is guaranteed ready from 3:00 PM. Want it guaranteed from 1:00 PM?';
-      offer.innerHTML = `<button type="button" class="ctx-add" id="arrAdd">Guarantee 1:00 PM <span class="ctx-price">+$${GUARANTEE.price}</span></button>`;
-      $('#arrAdd').onclick = () => { state.earlyCheckin = GUARANTEE.v; renderArrNote(); renderUpsell(); save(); };
-    }
-    offer.hidden = false;
   }
 }
 function renderDepNote() {
@@ -1066,7 +1072,7 @@ function setupWheels() {
       + f.slots.map((s, i) => {
           const cls = ['wheel-item'];
           if (f.off.includes(s.v)) { cls.push('off'); if (i === edgeIdx) cls.push(f.offSide === 'top' ? 'edge-bottom' : 'edge-top'); }
-          return `<div class="${cls.join(' ')}" role="option" id="${f.scroll}-opt-${i}" aria-selected="false" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag">${s.tag}</span>` : ''}</div>`;
+          return `<div class="${cls.join(' ')}" role="option" id="${f.scroll}-opt-${i}" aria-selected="false" data-idx="${i}">${s.t}${s.tag ? `<span class="wheel-tag${s.tagClass ? ' ' + s.tagClass : ''}">${s.tag}</span>` : ''}</div>`;
         }).join('')
       + '<div class="wheel-pad" aria-hidden="true"></div>';
     const items = $$('.wheel-item', sc);
@@ -1084,8 +1090,10 @@ function setupWheels() {
       const slot = f.slots[tentative], off = f.off.includes(slot.v);
       band.classList.toggle('off', off);
       hintEl.classList.toggle('off', off);
-      hintEl.innerHTML = off ? `<span class="wh-ic" aria-hidden="true">ⓘ</span>${f.offHint}` : f.stdHint;
-      confirm.textContent = 'Set ' + slot.t;
+      hintEl.innerHTML = off ? `<span class="wh-ic" aria-hidden="true">ⓘ</span>${slot.offHint || f.offHint}` : f.stdHint;
+      confirm.textContent = slot.confirm ? slot.confirm
+        : slot.price ? `Set ${slot.t} · +$${slot.price}`
+        : 'Set ' + slot.t;
     };
     const open = () => {
       wheel.hidden = false; btn.setAttribute('aria-expanded', true);
