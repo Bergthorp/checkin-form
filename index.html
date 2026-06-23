@@ -154,7 +154,7 @@
   .wheel-scroll:focus-visible { outline: 2px solid var(--teal); outline-offset: -3px; border-radius: 12px; }
   .cc:focus-visible, .timebtn:focus-visible, .ccsearch:focus-visible,
   .wheel-confirm:focus-visible, .upbtn:focus-visible, .yn-btn:focus-visible,
-  .ctx-add:focus-visible, .ctx-remove:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .ctx-remove:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 
   /* ---------- Time wheel picker ---------- */
   .timefield { position: relative; }
@@ -317,17 +317,14 @@
     background: #f1f6f4; border: 1px solid #d8e6e0; border-radius: 12px; padding: 16px 18px;
     display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
   }
-  /* Offer variant (pre-3 PM / post-11 AM) reads warmer */
-  .ctx-note.is-offer { background: #fff7ef; border-color: #f1d9c2; }
+  /* Confirmed paid-slot variant (early check-in / late check-out added) reads as a teal "done" state */
+  .ctx-note.is-added { background: #e9f5f1; border-color: #bfe0d4; }
   .ctx-text { flex: 1 1 240px; font-size: 14px; line-height: 1.5; color: var(--text-soft); }
+  .ctx-head { display: block; font-size: 14.5px; font-weight: 800; color: #0e4f4a; }
+  .ctx-check { margin-right: 7px; font-weight: 900; }
+  .ctx-amt { color: #0e4f4a; }
+  .ctx-sub { display: block; margin-top: 3px; font-size: 13.5px; color: var(--text-soft); }
   .ctx-offer { flex: none; }
-  .ctx-add {
-    display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px;
-    border: 1.5px solid #b4521f; background: #fff; color: #b4521f;
-    font-family: var(--font); font-size: 14.5px; font-weight: 800; cursor: pointer; transition: .15s;
-  }
-  .ctx-add:hover { background: #fbe6d4; }
-  .ctx-price { font-weight: 800; }
   .ctx-remove {
     background: none; border: none; padding: 0; color: var(--text-soft);
     font-family: var(--font); font-size: 14px; cursor: pointer; text-decoration: underline;
@@ -992,8 +989,9 @@ function renderArrNote() {
   if (!v || (!isPriced && !isLate)) { sec.hidden = true; return; }
   sec.hidden = false; sec.classList.add('reveal');
   if (isPriced) {
-    box.classList.add('is-offer');
-    text.textContent = `Early check-in added — your apartment is guaranteed ready from ${timeLabel(ARR_SLOTS, v)}.`;
+    box.classList.add('is-added');
+    text.innerHTML = `<span class="ctx-head"><span class="ctx-check" aria-hidden="true">✓</span>Early check-in added <span class="ctx-amt">· $${optPrice(EARLY_OPTS, v)}</span></span>`
+      + `<span class="ctx-sub">Your apartment is guaranteed ready from ${timeLabel(ARR_SLOTS, v)}.</span>`;
     offer.innerHTML = '<button type="button" class="ctx-remove" id="arrRemove">Remove</button>';
     $('#arrRemove').onclick = () => {
       state.arrTime = '15:00'; state.earlyCheckin = '';
@@ -1001,7 +999,7 @@ function renderArrNote() {
     };
     offer.hidden = false;
   } else {
-    box.classList.remove('is-offer');
+    box.classList.remove('is-added');
     text.textContent = 'No problem — check-in is fully self-service. We’ll send your door code and directions before you arrive, so you can get in whenever you land.';
     offer.hidden = true;
   }
@@ -1013,8 +1011,9 @@ function renderDepNote() {
   // Keep lateCheckout in sync with the chosen time (the time IS the paid product).
   state.lateCheckout = isPriced ? v : '';
   if (!v || !isPriced) { sec.hidden = true; return; }
-  sec.hidden = false; sec.classList.add('reveal'); box.classList.add('is-offer');
-  text.textContent = `Late check-out added — you’re welcome to stay until ${timeLabel(DEP_SLOTS, v)}.`;
+  sec.hidden = false; sec.classList.add('reveal'); box.classList.add('is-added');
+  text.innerHTML = `<span class="ctx-head"><span class="ctx-check" aria-hidden="true">✓</span>Late check-out added <span class="ctx-amt">· $${optPrice(LATE_OPTS, v)}</span></span>`
+    + `<span class="ctx-sub">You’re welcome to stay until ${timeLabel(DEP_SLOTS, v)}.</span>`;
   offer.innerHTML = '<button type="button" class="ctx-remove" id="depRemove">Remove</button>';
   $('#depRemove').onclick = () => {
     state.depTime = '11:00'; state.lateCheckout = '';
