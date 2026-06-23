@@ -554,7 +554,7 @@
             <button type="button" class="wheel-confirm" id="arrConfirm">Set time</button>
           </div>
         </div>
-        <p class="timehint">You can update this anytime before you arrive.</p>
+        <p class="timehint" id="arrTimehint">You can update this anytime before you arrive.</p>
         <div class="err" data-for="arrTime">Please choose your arrival time.</div>
       </section>
 
@@ -583,6 +583,7 @@
             <button type="button" class="wheel-confirm" id="depConfirm">Set time</button>
           </div>
         </div>
+        <p class="timehint" id="depTimehint">You can update this anytime before you leave.</p>
         <div class="err" data-for="depTime">Please choose your departure time.</div>
       </section>
 
@@ -986,6 +987,7 @@ function renderArrNote() {
   const isLate   = ARR_LATE.includes(v);
   // Keep earlyCheckin in sync with the chosen time (the time IS the paid product).
   state.earlyCheckin = isPriced ? v : '';
+  $('#arrTimehint').hidden = isPriced;   // hide "update anytime" once early check-in is added (avoids crowding)
   if (!v || (!isPriced && !isLate)) { sec.hidden = true; return; }
   sec.hidden = false; sec.classList.add('reveal');
   if (isPriced) {
@@ -1010,6 +1012,7 @@ function renderDepNote() {
   const isPriced = DEP_PRICED.includes(v);   // 12 PM / 1 PM — picking the time buys it
   // Keep lateCheckout in sync with the chosen time (the time IS the paid product).
   state.lateCheckout = isPriced ? v : '';
+  $('#depTimehint').hidden = isPriced;   // hide "update anytime" once late check-out is added
   if (!v || !isPriced) { sec.hidden = true; return; }
   sec.hidden = false; sec.classList.add('reveal'); box.classList.add('is-added');
   text.innerHTML = `<span class="ctx-head"><span class="ctx-check" aria-hidden="true">✓</span>Late check-out added <span class="ctx-amt">· $${optPrice(LATE_OPTS, v)}</span></span>`
