@@ -400,13 +400,7 @@
   .backlink:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 6px; }
   .extras-sub { font-size: 16px; color: var(--text-soft); margin-bottom: 38px; }
 
-  /* ---- Damage deposit / waiver ---- */
-  .deposit-head { text-align: center; margin-bottom: 24px; }
-  .deposit-ic { display: inline-block; line-height: 0; }
-  .deposit-title { color: var(--text); font-size: 26px; font-weight: 800; margin-top: 12px; }
-  .deposit-q { font-size: 17px; font-weight: 700; color: var(--text); }
-  .deposit-qs { font-size: 14.5px; color: var(--text-soft); margin: 4px 0 20px; }
-
+  /* ---- Damage waiver options ---- */
   .opt-card {
     display: flex; gap: 14px; align-items: flex-start;
     border: 1.5px solid var(--border); border-radius: 14px; padding: 18px;
@@ -650,22 +644,12 @@
       <button type="button" class="backlink" id="extrasBack">← Back to your details</button>
       <div class="brand">
         <img class="brand-mark" src="logo-mark.png" alt="" width="52" height="52" />
-        <h1>A few optional extras</h1>
+        <h1>Damage deposit</h1>
       </div>
-      <p class="extras-sub">Add these to your stay, or continue without them — completely up to you.</p>
+      <p class="extras-sub">Choose how you’d like to cover any accidental damage during your stay — completely up to you.</p>
 
       <!-- Damage deposit / waiver -->
       <section>
-        <div class="deposit-head">
-          <span class="deposit-ic" aria-hidden="true">
-            <svg viewBox="0 0 56 56" width="56" height="56"><rect width="56" height="56" rx="15" fill="#57b6c4"/><g fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M17 21h19a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H20a3 3 0 0 1-3-3V21z"/><path d="M17 21v-1.5a2.5 2.5 0 0 1 2.5-2.5H34"/></g><circle cx="34" cy="29.5" r="2" fill="#fff"/></svg>
-          </span>
-          <h2 class="deposit-title">Damage deposit</h2>
-        </div>
-
-        <div class="deposit-q">Choose your protection option</div>
-        <div class="deposit-qs">Select how you’d like to handle potential damages during your stay</div>
-
         <div class="opt-card waiver selected" id="waiverCard" role="button" tabindex="0" aria-pressed="true">
           <span class="opt-radio" aria-hidden="true"></span>
           <div class="opt-main">
