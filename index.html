@@ -479,28 +479,6 @@
   .terms-body li { margin-bottom: 6px; }
   .terms-body b { color: var(--text); }
 
-  /* ---- Centered confirm dialog (replaces native confirm()) ---- */
-  #confirmView[hidden] { display: none; }
-  .confirm-backdrop { position: fixed; inset: 0; background: rgba(20, 28, 40, .55); z-index: 200; }
-  .confirm-card {
-    position: fixed; z-index: 201; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 420px; max-width: 92vw; background: #fff; border-radius: 16px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, .3); padding: 26px 26px 22px;
-    animation: payIn .25s ease both; text-align: center;
-  }
-  .confirm-card .confirm-msg { font-size: 15.5px; color: var(--text); line-height: 1.55; margin-bottom: 22px; }
-  .confirm-actions { display: flex; gap: 10px; justify-content: center; }
-  .confirm-actions button {
-    font-family: var(--font); font-size: 15px; font-weight: 600; cursor: pointer;
-    padding: 11px 22px; border-radius: 999px; border: 1.5px solid var(--border);
-    background: #fff; color: var(--text); transition: background .15s, border-color .15s;
-  }
-  .confirm-actions button:hover { background: #f4f5f5; }
-  .confirm-actions .confirm-ok {
-    border-color: var(--asterisk); background: var(--asterisk); color: #fff;
-  }
-  .confirm-actions .confirm-ok:hover { background: #cf5430; border-color: #cf5430; }
-
   /* ---------- Test toolbar (dev only — delete for prod) ---------- */
   .testbar {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -772,17 +750,6 @@
       </div>
     </div>
 
-    <!-- ===================== CONFIRM DIALOG ===================== -->
-    <div id="confirmView" hidden>
-      <div class="confirm-backdrop"></div>
-      <div class="confirm-card" role="alertdialog" aria-modal="true" aria-label="Confirm">
-        <div class="confirm-msg" id="confirmMsg"></div>
-        <div class="confirm-actions">
-          <button type="button" id="confirmCancel">Cancel</button>
-          <button type="button" class="confirm-ok" id="confirmOk">Remove</button>
-        </div>
-      </div>
-    </div>
 
     <!-- ===================== SIMULATED STRIPE PAYMENT ===================== -->
     <div id="payView" hidden>
@@ -1116,7 +1083,10 @@ function setupWheels() {
       const slot = f.slots[tentative], off = f.off.includes(slot.v);
       band.classList.toggle('off', off);
       hintEl.classList.toggle('off', off);
-      hintEl.innerHTML = off ? `<span class="wh-ic" aria-hidden="true">ⓘ</span>${slot.offHint || f.offHint}` : f.stdHint;
+      // Standard zone: only anchor the baseline expectation on the default slot
+      // (3 PM / 11 AM). Repeating it on every later time is just noise.
+      hintEl.innerHTML = off ? `<span class="wh-ic" aria-hidden="true">ⓘ</span>${slot.offHint || f.offHint}`
+        : slot.v === f.def ? f.stdHint : '';
       confirm.textContent = slot.confirm ? slot.confirm
         : slot.price ? `Set ${slot.t} · +$${slot.price}`
         : 'Set ' + slot.t;
@@ -1317,37 +1287,8 @@ function addGuest() {
   state.guests.push({ idPhoto: '', idPreview: '' });
   save(); renderGuests();
 }
-// Centered confirm dialog — replaces the native confirm() (which the browser
-// always docks to the top of the window). Returns a Promise<boolean>.
-function confirmDialog(message, { okLabel = 'Remove' } = {}) {
-  return new Promise(resolve => {
-    const view = $('#confirmView');
-    $('#confirmMsg').textContent = message;
-    const okBtn = $('#confirmOk');
-    okBtn.textContent = okLabel;
-    view.hidden = false;
-    const close = (result) => {
-      view.hidden = true;
-      okBtn.removeEventListener('click', onOk);
-      $('#confirmCancel').removeEventListener('click', onCancel);
-      $('.confirm-backdrop', view).removeEventListener('click', onCancel);
-      document.removeEventListener('keydown', onKey);
-      resolve(result);
-    };
-    const onOk = () => close(true);
-    const onCancel = () => close(false);
-    const onKey = (e) => { if (e.key === 'Escape') onCancel(); else if (e.key === 'Enter') onOk(); };
-    okBtn.addEventListener('click', onOk);
-    $('#confirmCancel').addEventListener('click', onCancel);
-    $('.confirm-backdrop', view).addEventListener('click', onCancel);
-    document.addEventListener('keydown', onKey);
-  });
-}
-
-async function removeGuest(i) {
+function removeGuest(i) {
   if (state.guests.length <= 1) return;
-  const ok = await confirmDialog('Only guests who share an ID will be granted access by building security. Remove this guest?');
-  if (!ok) return;
   state.guests.splice(i, 1);
   save(); renderGuests();
 }
