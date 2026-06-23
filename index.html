@@ -1090,6 +1090,13 @@ function setupWheels() {
       sc.scrollTop = idx * WHEEL_ITEM; setActive(idx);
       sc.focus({ preventScroll: true });
       requestAnimationFrame(() => { sc.scrollTop = idx * WHEEL_ITEM; setActive(idx); });
+      // The dial is absolutely positioned, so it can open below the fold. If it spills past
+      // the viewport (top or bottom — leaving room for bottom browser chrome), slide it into
+      // view so the whole wheel + "Set" button are reachable without fighting the scroll-snap.
+      const r = wheel.getBoundingClientRect();
+      if (r.top < 12 || r.bottom > window.innerHeight - 80) {
+        wheel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     };
     const close = returnFocus => {
       wheel.hidden = true; btn.setAttribute('aria-expanded', false);
