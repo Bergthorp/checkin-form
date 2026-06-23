@@ -1079,7 +1079,7 @@ function setupWheels() {
       + '<div class="wheel-pad" aria-hidden="true"></div>';
     const items = $$('.wheel-item', sc);
     let tentative = 0;
-    // Highlight the centered slot, but DON'T commit it — the guest must tap Confirm.
+    // Highlight the centered slot (tentative). Commit happens on tap / Set / Enter / tap-away; Escape cancels.
     // Crossing into the "off" zone recolors the band grey and swaps the hint to an availability note.
     const setActive = idx => {
       tentative = clamp(f, idx);
@@ -1116,9 +1116,10 @@ function setupWheels() {
       renderUpsell(); save(); close(true);
     };
     sc.addEventListener('scroll', () => setActive(Math.round(sc.scrollTop / WHEEL_ITEM)));
+    // Tap a time directly to set it — no need to scroll down to the "Set" button.
     sc.addEventListener('click', e => {
       const it = e.target.closest('.wheel-item'); if (!it) return;
-      sc.scrollTo({ top: +it.dataset.idx * WHEEL_ITEM, behavior: 'smooth' });
+      setActive(+it.dataset.idx); commit();
     });
     sc.addEventListener('keydown', e => {
       const k = e.key;
@@ -1136,8 +1137,9 @@ function setupWheels() {
       }
     });
     confirm.addEventListener('click', commit);
-    btn.addEventListener('click', () => wheel.hidden ? open() : close(false));
-    document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(false); });
+    btn.addEventListener('click', () => wheel.hidden ? open() : commit());
+    // Tap anywhere outside an open wheel to keep the centered time (commit), so the guest is never stranded if "Set" is off-screen.
+    document.addEventListener('click', e => { if (!wheel.hidden && !wrap.contains(e.target)) commit(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   });
 }
