@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Desert Key Check-In</title>
+<!-- Stripe.js — only does anything when the backend returns a publishable key
+     (live payments). Harmless in standalone/demo mode. -->
+<script src="https://js.stripe.com/v3/"></script>
 <style>
   /* ============================================================
      DESIGN TOKENS — Hostaway-style. Tweak to restyle fast.
@@ -185,7 +188,8 @@
   }
   .wheel-confirm:hover { background: #0c423e; }
   .wheel-scroll {
-    height: 240px; overflow-y: scroll; scroll-snap-type: y mandatory;
+    height: 240px; overflow-y: scroll; overflow-x: hidden; scroll-snap-type: y mandatory;
+    touch-action: pan-y; overscroll-behavior-x: none;
     -webkit-overflow-scrolling: touch; scrollbar-width: none;
     -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent);
             mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent);
@@ -384,6 +388,9 @@
   .pay-btn:disabled { opacity: .75; cursor: default; }
   .pay-secure { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 14px; }
   .pay-secure b { color: #635bff; letter-spacing: -.3px; }
+  .pay-err { background: #fdecec; color: #b4231f; border: 1px solid #f3c4c2; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .pay-err[hidden] { display: none; }
+  #payElement[hidden], #payFake[hidden] { display: none; }
 
   /* ============================================================
      STEP 2 — Optional extras (damage waiver)
@@ -622,7 +629,7 @@
             <input type="text" id="plate" placeholder="Code + plate number (optional)" />
           </div>
         </div>
-        <div class="q">
+        <div class="q" id="sofabedQ">
           <h2>Would you like the sofa bed prepared for sleeping?</h2>
           <div class="yn" id="sofabedToggle" role="group" aria-label="Sofa bed">
             <button type="button" class="yn-btn" data-val="yes">Yes</button>
@@ -770,16 +777,23 @@
         </div>
         <div class="pay-body">
           <div class="pay-summary" id="paySummary"></div>
-          <label class="pay-lbl">Card information</label>
-          <div class="pay-field pay-card-no"><span class="pay-cardbrand">💳</span><span class="pay-fake">4242 4242 4242 4242</span></div>
-          <div class="pay-field-row">
-            <div class="pay-field"><span class="pay-fake">12 / 28</span></div>
-            <div class="pay-field"><span class="pay-fake">123</span></div>
+          <!-- LIVE: Stripe Payment Element (cards + Apple Pay / Google Pay wallets).
+               Populated only when the backend returns a publishable key. -->
+          <div id="payElement" hidden></div>
+          <!-- DEMO: simulated card fields, shown when no Stripe keys are configured. -->
+          <div id="payFake">
+            <label class="pay-lbl">Card information</label>
+            <div class="pay-field pay-card-no"><span class="pay-cardbrand">💳</span><span class="pay-fake">4242 4242 4242 4242</span></div>
+            <div class="pay-field-row">
+              <div class="pay-field"><span class="pay-fake">12 / 28</span></div>
+              <div class="pay-field"><span class="pay-fake">123</span></div>
+            </div>
+            <label class="pay-lbl">Name on card</label>
+            <div class="pay-field"><span class="pay-fake">Guest name</span></div>
           </div>
-          <label class="pay-lbl">Name on card</label>
-          <div class="pay-field"><span class="pay-fake">Guest name</span></div>
+          <div class="pay-err" id="payMsg" hidden></div>
           <button type="button" class="pay-btn" id="payBtn">Pay $0.00</button>
-          <div class="pay-secure">🔒 Test mode · no real charge · powered by <b>stripe</b></div>
+          <div class="pay-secure" id="paySecure">🔒 Test mode · no real charge · powered by <b>stripe</b></div>
         </div>
       </div>
     </div>
@@ -904,7 +918,29 @@ const MARKETS = {
     manageUrl: 'https://desertkey.ae'      // TODO: Iceland manage-booking URL
   }
 };
-const MARKET = MARKETS[(new URLSearchParams(location.search).get('m') || '').toLowerCase()] || MARKETS.ae;
+// `let`, not `const`: when the form is served from control-tower with a booking
+// token, the backend tells us the real market (UAE vs Iceland) and we reassign
+// MARKET before the first render. The ?m= param is just the standalone-demo default.
+let MARKET = MARKETS[(new URLSearchParams(location.search).get('m') || '').toLowerCase()] || MARKETS.ae;
+
+/* ---- Production wiring (control-tower) ----
+   When served at /u/<token>, control-tower injects window.__CHECKIN_TOKEN__.
+   We also accept ?t=<token> as a fallback. With a token we fetch the booking to
+   prefill contact details, pick the right market, and decide whether to ask the
+   sofa-bed question. Without one, the form runs as a standalone demo (no API). */
+const CHECKIN = {
+  token: (typeof window !== 'undefined' && window.__CHECKIN_TOKEN__)
+    || new URLSearchParams(location.search).get('t')
+    || null,
+  // null = unknown (standalone/demo) → show the sofa-bed question by default.
+  hasSofaBed: true,
+  live: false,            // true once a booking is resolved from the backend
+  paymentsLive: false,    // true when Stripe keys are configured (real charges)
+  publishableKey: null,   // Stripe publishable key for the browser
+};
+
+// Stripe.js runtime handles (set up lazily in openPay when payments are live).
+const PAY = { stripe: null, elements: null, clientSecret: null };
 
 /* ---- State ---- */
 const state = {
@@ -929,7 +965,7 @@ function load() {
 /* ---- Time chips (no default — guest must choose) ---- */
 const ARR_SLOTS = [
   { v: '13:00', t: '1:00 PM', tag: 'Early check-in', tagClass: 'tag-early', price: 138, offHint: '1:00 PM check-in costs $138.' },
-  { v: '14:00', t: '2:00 PM', tag: 'Early check-in', tagClass: 'tag-early', price: 98,  offHint: '2:00 PM check-in costs $98.' },
+  { v: '14:00', t: '2:00 PM', tag: 'Early check-in', tagClass: 'tag-early', price: 89,  offHint: '2:00 PM check-in costs $89.' },
   { v: '15:00', t: '3:00 PM' },
   { v: '16:00', t: '4:00 PM' },
   { v: '17:00', t: '5:00 PM' },
@@ -950,7 +986,7 @@ const DEP_SLOTS = [
   { v: '09:00', t: '9:00 AM' },
   { v: '10:00', t: '10:00 AM' },
   { v: '11:00', t: '11:00 AM' },
-  { v: '12:00', t: '12:00 PM', tag: 'Late check-out', tagClass: 'tag-early', price: 98,  offHint: '12:00 PM check-out costs $98.' },
+  { v: '12:00', t: '12:00 PM', tag: 'Late check-out', tagClass: 'tag-early', price: 89,  offHint: '12:00 PM check-out costs $89.' },
   { v: '13:00', t: '1:00 PM',  tag: 'Late check-out', tagClass: 'tag-early', price: 138, offHint: '1:00 PM check-out costs $138.' }
 ];
 function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? s.t : '—'; }
@@ -958,8 +994,8 @@ function timeLabel(slots, v) { const s = slots.find(x => x.v === v); return s ? 
 /* ---- Paid time slots (secondary). The early-arrival / late-departure TIME is the product:
    picking 1/2 PM arrival or 12/1 PM departure buys a $138 guaranteed slot; earlyCheckin/
    lateCheckout hold '' or the chosen time value. Flat price, no calendar. */
-const EARLY_OPTS = [ { v: '13:00', t: '1:00 PM', price: 138 }, { v: '14:00', t: '2:00 PM', price: 98 } ];
-const LATE_OPTS  = [ { v: '12:00', t: '12:00 PM', price: 98 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
+const EARLY_OPTS = [ { v: '13:00', t: '1:00 PM', price: 138 }, { v: '14:00', t: '2:00 PM', price: 89 } ];
+const LATE_OPTS  = [ { v: '12:00', t: '12:00 PM', price: 89 }, { v: '13:00', t: '1:00 PM', price: 138 } ];
 // Step-2 add-ons. Damage waiver is a flat one-time fee regardless of stay length.
 const WAIVER_PRICE = 89;
 function optPrice(opts, v) { const o = opts.find(x => x.v === v); return o && o.price ? o.price : 0; }
@@ -1352,6 +1388,7 @@ function validate() {
 /* ---- Submit ---- */
 function finalizeCheckin(paidAmount) {
   console.log('CHECK-IN SUBMITTED →', JSON.parse(JSON.stringify(state)), 'paid:', paidAmount);
+  postCheckin(paidAmount);   // persist to control-tower (no-op in standalone demo)
   if (MARKET.idUpload) $('#doneGuests').textContent = state.guests.length;
   $('#doneArr').textContent = timeLabel(ARR_SLOTS, state.arrTime);
   $('#doneDep').textContent = timeLabel(DEP_SLOTS, state.depTime);
@@ -1370,17 +1407,76 @@ function finalizeCheckin(paidAmount) {
   $('#tState').textContent = 'submitted ✓ (see console)';
 }
 
-function openPay(total) {
+function payMsg(text) {
+  const el = $('#payMsg');
+  if (!text) { el.hidden = true; el.textContent = ''; return; }
+  el.textContent = text; el.hidden = false;
+}
+
+async function openPay(total) {
   const items = [];
   if (state.earlyCheckin) items.push(`Early check-in (${optLabel(EARLY_OPTS, state.earlyCheckin)}) — $${optPrice(EARLY_OPTS, state.earlyCheckin)}`);
   if (state.lateCheckout) items.push(`Late check-out (${optLabel(LATE_OPTS, state.lateCheckout)}) — $${optPrice(LATE_OPTS, state.lateCheckout)}`);
   if (state.damageWaiver === 'waiver') items.push(`Damage waiver — $${WAIVER_PRICE}`);
   $('#paySummary').innerHTML = items.join('<br>');
   $('#payAmount').textContent = '$' + total.toFixed(2);
+  payMsg('');
   const btn = $('#payBtn');
   btn.disabled = false;
   btn.textContent = 'Pay $' + total.toFixed(2);
   $('#payView').hidden = false;
+  // Default to the simulated card UI; the live path swaps it in below.
+  $('#payFake').hidden = false;
+  $('#payElement').hidden = true;
+  PAY.clientSecret = null;
+  if (CHECKIN.paymentsLive && CHECKIN.token && window.Stripe) {
+    btn.disabled = true;
+    btn.textContent = 'Loading payment…';
+    const ok = await initStripePay();
+    btn.disabled = false;
+    btn.textContent = 'Pay $' + total.toFixed(2);
+    if (!ok) {
+      // Live setup failed → fall back to the simulated flow so the guest is
+      // never blocked from completing check-in.
+      $('#payFake').hidden = false;
+      $('#payElement').hidden = true;
+    }
+  }
+}
+
+/* Create a PaymentIntent on the backend (amount is computed server-side from the
+   selected options) and mount the Stripe Payment Element. Returns true on
+   success. Apple Pay / Google Pay appear automatically in the element when the
+   device + domain support them. */
+async function initStripePay() {
+  try {
+    const res = await fetch('/api/checkin/payment-intent?t=' + encodeURIComponent(CHECKIN.token), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        token: CHECKIN.token,
+        earlyCheckin: state.earlyCheckin || null,
+        lateCheckout: state.lateCheckout || null,
+        damageWaiver: state.damageWaiver || null,
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || !data.ok) return false;
+    if (data.demo || !data.clientSecret) return false;  // server has no secret key → simulated
+
+    PAY.stripe = PAY.stripe || window.Stripe(CHECKIN.publishableKey);
+    PAY.clientSecret = data.clientSecret;
+    PAY.elements = PAY.stripe.elements({ clientSecret: data.clientSecret });
+    const el = $('#payElement');
+    el.innerHTML = '';
+    const paymentEl = PAY.elements.create('payment', { layout: 'tabs' });
+    paymentEl.mount(el);
+    $('#payFake').hidden = true;
+    el.hidden = false;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 $('#submitBtn').addEventListener('click', () => {
@@ -1395,11 +1491,37 @@ $('#submitBtn').addEventListener('click', () => {
 });
 
 $('#payClose').addEventListener('click', () => { $('#payView').hidden = true; });
-$('#payBtn').addEventListener('click', () => {
+$('#payBtn').addEventListener('click', async () => {
   const total = totalPrice();
   const btn = $('#payBtn');
+  payMsg('');
   btn.disabled = true;
   btn.textContent = 'Processing…';
+
+  // Live Stripe payment.
+  if (PAY.clientSecret && PAY.stripe && PAY.elements) {
+    const { error, paymentIntent } = await PAY.stripe.confirmPayment({
+      elements: PAY.elements,
+      redirect: 'if_required',   // no full-page redirect for card / wallet payments
+    });
+    if (error) {
+      payMsg(error.message || 'Payment could not be completed. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Pay $' + total.toFixed(2);
+      return;
+    }
+    if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+      btn.textContent = 'Paid ✓';
+      setTimeout(() => finalizeCheckin(total), 600);
+      return;
+    }
+    payMsg('Payment not completed. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Pay $' + total.toFixed(2);
+    return;
+  }
+
+  // Simulated payment (no Stripe keys configured).
   setTimeout(() => {
     btn.textContent = 'Paid ✓';
     setTimeout(() => finalizeCheckin(total), 600);
@@ -1513,15 +1635,82 @@ function applyMarket() {
     state.guests = [];   // nothing to collect → keep the payload clean
   }
   if (!MARKET.parking) $('#parkingQ').hidden = true;
+  // Sofa-bed question only when the unit actually has a sofa bed (backend tells
+  // us). Standalone/demo defaults to showing it.
+  if (!CHECKIN.hasSofaBed) { $('#sofabedQ').hidden = true; state.sofaBed = ''; }
+}
+
+/* ---- Booking lookup (production) ----
+   Resolve the token into the booking: set the market, prefill contact details,
+   and learn whether to ask the sofa-bed question. Soft-fails to demo mode so a
+   backend hiccup never blocks a guest from checking in. */
+async function loadBooking() {
+  if (!CHECKIN.token) return;
+  try {
+    const res = await fetch('/api/checkin/booking?t=' + encodeURIComponent(CHECKIN.token), { headers: { 'accept': 'application/json' } });
+    if (!res.ok) return;            // unknown/revoked token → stay in demo mode
+    const data = await res.json();
+    if (!data || !data.ok) return;
+    CHECKIN.live = true;
+    if (data.market && MARKETS[data.market]) MARKET = MARKETS[data.market];
+    if (data.flags) CHECKIN.hasSofaBed = data.flags.hasSofaBed !== false;
+    state.iso = MARKET.iso; state.cc = MARKET.cc;
+    if (data.prefill) {
+      if (data.prefill.email) state.email = data.prefill.email;
+      if (data.prefill.phone) state.phone = normalizePhone(data.prefill.phone);
+    }
+    if (data.payments && data.payments.live && data.payments.publishableKey) {
+      CHECKIN.paymentsLive = true;
+      CHECKIN.publishableKey = data.payments.publishableKey;
+    }
+  } catch (_) { /* network error → demo mode */ }
+}
+
+/* Strip the market dial code off a Hostaway phone so it sits cleanly behind the
+   country-code chip (we already show state.cc separately). */
+function normalizePhone(p) {
+  let s = String(p || '').trim();
+  if (state.cc && s.startsWith(state.cc)) s = s.slice(state.cc.length).trim();
+  return s;
+}
+
+/* ---- Submit to backend (production) ---- */
+async function postCheckin(paidAmount) {
+  if (!CHECKIN.token) return;       // demo mode — nothing to persist
+  const payload = {
+    token: CHECKIN.token,
+    checkinTime: state.arrTime || null,
+    checkoutTime: state.depTime || null,
+    arrivingByCar: MARKET.parking ? (state.parking === 'yes') : null,
+    carPlate: state.plate || null,
+    sofaBed: CHECKIN.hasSofaBed ? (state.sofaBed === 'yes') : null,
+    guests: MARKET.idUpload ? state.guests.map((_, i) => ({ name: '' })) : [],
+    email: state.email || null,
+    phone: state.phone ? (state.cc + ' ' + state.phone).trim() : null,
+    damageWaiver: state.damageWaiver,
+    earlyCheckin: state.earlyCheckin || null,
+    lateCheckout: state.lateCheckout || null,
+    paidAmount: paidAmount || 0,
+  };
+  try {
+    await fetch('/api/checkin/submit?t=' + encodeURIComponent(CHECKIN.token), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (_) { /* best-effort — the guest already sees the confirmation */ }
 }
 
 /* ---- Init ---- */
-load();
-applyMarket();
-fillContactValues();
-wireContact();
-wireExtras();
-if (MARKET.idUpload) renderGuests();
+(async function boot() {
+  load();
+  await loadBooking();
+  applyMarket();
+  fillContactValues();
+  wireContact();
+  wireExtras();
+  if (MARKET.idUpload) renderGuests();
+})();
 </script>
 </body>
 </html>
