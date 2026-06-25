@@ -810,7 +810,7 @@
         <div class="row"><span class="k">Damage protection</span><span class="v" id="doneWaiver">—</span></div>
         <div class="row" id="donePaidRow" hidden><span class="k">Paid via Stripe</span><span class="v" id="donePaid">—</span></div>
       </div>
-      <div class="done-manage">
+      <div class="done-manage" id="manageBlock">
         <div class="dm-q">Plans changed?</div>
         <div class="dm-sub">Extend, shorten, or adjust your stay anytime on our site.</div>
         <a class="manage-btn" id="manageBtn" href="https://desertkey.ae" target="_blank" rel="noopener">Manage your booking →</a>
@@ -915,7 +915,7 @@ const MARKETS = {
     logo:       null,                      // no logo for Iceland (title only)
     iso: 'US',  cc: '+1',                  // default phone country = USA (most Iceland guests are US travellers)
     idUpload: false, parking: false, sofaBed: false,
-    manageUrl: 'https://desertkey.ae'      // TODO: Iceland manage-booking URL
+    manageUrl: null                        // no "Manage your booking" link for Iceland
   }
 };
 // `let`, not `const`: when the form is served from control-tower with a booking
@@ -1634,7 +1634,10 @@ function applyMarket() {
     if (MARKET.logo) { mark.src = MARKET.logo; mark.style.display = ''; }
     else { mark.removeAttribute('src'); mark.style.display = 'none'; }
   });
-  $('#manageBtn').href = MARKET.manageUrl;
+  // "Plans changed? / Manage your booking" — only when the market has a manage
+  // URL. Iceland has none → hide the whole block.
+  if (MARKET.manageUrl) { $('#manageBtn').href = MARKET.manageUrl; $('#manageBlock').hidden = false; }
+  else { $('#manageBlock').hidden = true; }
   if (!MARKET.idUpload) {
     $('#idBlock').hidden = true;
     $('#doneGuestsRow').hidden = true;
