@@ -911,8 +911,8 @@ const MARKETS = {
   },
   is: {
     docTitle:   'Iceland Check-In',
-    brandTitle: 'Iceland Check-In Form',   // TODO: real Iceland brand name
-    logo:       'logo-mark.png',           // TODO: Iceland logo asset
+    brandTitle: 'Iceland Check-In',
+    logo:       null,                      // no logo for Iceland (title only)
     iso: 'IS',  cc: '+354',
     idUpload: false, parking: false,
     manageUrl: 'https://desertkey.ae'      // TODO: Iceland manage-booking URL
@@ -1627,7 +1627,13 @@ $('#tReset').addEventListener('click', () => { localStorage.removeItem(LS_KEY); 
 function applyMarket() {
   document.title = MARKET.docTitle;
   $('#brandTitle').textContent = MARKET.brandTitle;
-  $('#brandMark').src = MARKET.logo;
+  // Logo: show on every brand row when set, otherwise remove it entirely (title-
+  // only brand, e.g. Iceland). Toggle display, not [hidden] — .brand-mark sets
+  // display:block which would override the hidden attribute.
+  $$('.brand-mark').forEach(mark => {
+    if (MARKET.logo) { mark.src = MARKET.logo; mark.style.display = ''; }
+    else { mark.removeAttribute('src'); mark.style.display = 'none'; }
+  });
   $('#manageBtn').href = MARKET.manageUrl;
   if (!MARKET.idUpload) {
     $('#idBlock').hidden = true;
