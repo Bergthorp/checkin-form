@@ -913,8 +913,8 @@ const MARKETS = {
     docTitle:   'Iceland Check-In',
     brandTitle: 'Iceland Check-In',
     logo:       null,                      // no logo for Iceland (title only)
-    iso: 'IS',  cc: '+354',
-    idUpload: false, parking: false,
+    iso: 'US',  cc: '+1',                  // default phone country = USA (most Iceland guests are US travellers)
+    idUpload: false, parking: false, sofaBed: false,
     manageUrl: 'https://desertkey.ae'      // TODO: Iceland manage-booking URL
   }
 };
@@ -1641,9 +1641,11 @@ function applyMarket() {
     state.guests = [];   // nothing to collect → keep the payload clean
   }
   if (!MARKET.parking) $('#parkingQ').hidden = true;
-  // Sofa-bed question only when the unit actually has a sofa bed (backend tells
-  // us). Standalone/demo defaults to showing it.
-  if (!CHECKIN.hasSofaBed) { $('#sofabedQ').hidden = true; state.sofaBed = ''; }
+  // Sofa-bed question: hidden when the market never has it (e.g. Iceland), or when
+  // the booked unit has no sofa bed (backend flag). Standalone/demo shows it.
+  if (MARKET.sofaBed === false || !CHECKIN.hasSofaBed) {
+    $('#sofabedQ').hidden = true; state.sofaBed = ''; CHECKIN.hasSofaBed = false;
+  }
 }
 
 /* ---- Booking lookup (production) ----
