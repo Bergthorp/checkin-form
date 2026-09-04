@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "checkin-harness",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["serve-demos.mjs"],
+      "cwd": "/Users/phillipppalsson/checkin-form",
+      "port": 4191
+    }
+  ]
+}
