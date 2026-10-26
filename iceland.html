@@ -508,6 +508,7 @@
      screen's one loud card; the car card below stays plain. */
   .done-xfer { max-width: 460px; margin: 16px auto 0; text-align: left; background: linear-gradient(160deg, #0e4f4a 0%, #157a6f 100%); color: #fff; border-radius: var(--radius); padding: 20px 20px 16px; box-shadow: 0 6px 22px rgba(14,79,74,.22); }
   .done-xfer[hidden] { display: none; }
+  .done-xfer .dx-ph { display: block; width: calc(100% + 40px); height: auto; aspect-ratio: 840/350; object-fit: cover; margin: -20px -20px 16px; border-radius: var(--radius) var(--radius) 0 0; background: #0b2f2c; }
   .done-xfer .dx-head { display: flex; align-items: flex-start; gap: 14px; }
   .done-xfer .dx-icon { flex: none; line-height: 0; background: rgba(255,255,255,.14); border-radius: 12px; padding: 9px; }
   .done-xfer .dx-icon svg { width: 26px; height: 26px; display: block; }
@@ -1871,6 +1872,7 @@
            links in MARKETS.is.airportTransfer — never strip ?trackingCode).
            Views/taps go to /api/checkin/tap. -->
       <div class="done-xfer" id="xferBlock" hidden>
+        <img class="dx-ph" src="img/airport-car.jpg" width="840" height="350" alt="Private Mercedes van outside Harpa, Reykjavík" loading="lazy">
         <div class="dx-head">
           <span class="dx-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 10h4a2 2 0 0 1 0 4h-4l-4 7h-3l2 -7h-4l-2 2h-3l2 -4l-2 -4h3l2 2h4l-2 -7h3z"/></svg></span>
           <span>
@@ -2856,13 +2858,21 @@ function applyPricing(p) {
    at pay time, so display and charge always agree. Registering 06:00 in the
    priced/off lists makes the wheel grey it, the total include it, and picking it
    flow through the existing paid-upgrade + Stripe path unchanged. Idempotent. */
-function injectOvernightSlot(ov) {
+/* Remove one paid slot from the wheel and every priced list (owner: when the
+   super slot is offered, the wheel shows only one hourly upgrade next to it). */
+function dropPaidSlot(v, slots, ...lists) {
+  const i = slots.findIndex(s => s.v === v); if (i >= 0) slots.splice(i, 1);
+  lists.forEach(l => { const j = l.findIndex(x => (x && x.v ? x.v : x) === v); if (j >= 0) l.splice(j, 1); });
+}
+function injectOvernightSlot(ov, keep) {
   const price = Number(ov && ov.price);
   if (!(price > 0)) return;
   if (ARR_SLOTS.some(s => s.v === '06:00')) return;
+  // 6 AM + 1 PM only — drop 2 PM, unless the guest already bought it.
+  if (keep !== '14:00') dropPaidSlot('14:00', ARR_SLOTS, ARR_EARLY, ARR_PRICED, EARLY_OPTS);
   CHECKIN.overnightPrice = price;
   ARR_SLOTS.unshift({
-    v: '06:00', t: '6:00 AM', tag: 'Overnight access', tagClass: 'tag-overnight',
+    v: '06:00', t: '6:00 AM', tag: 'Super early check-in', tagClass: 'tag-overnight',
     price, overnight: true,
     offHint: 'Check-in any time after 6:00 AM for the cost of $' + price + '.'
   });
@@ -2874,13 +2884,15 @@ function injectOvernightSlot(ov) {
    the BOTTOM of the leave wheel — buy the night after so the apartment is yours
    through the day. Same terracotta "Overnight access" tag, same full-night price,
    same paid-upgrade + Stripe path (via the LATE_OPTS / DEP_PRICED lists). */
-function injectLateCheckoutSlot(lc) {
+function injectLateCheckoutSlot(lc, keep) {
   const price = Number(lc && lc.price);
   if (!(price > 0)) return;
   if (DEP_SLOTS.some(s => s.v === '23:00')) return;
+  // 12 PM + 11 PM only — drop 1 PM, unless the guest already bought it.
+  if (keep !== '13:00') dropPaidSlot('13:00', DEP_SLOTS, DEP_LATE, DEP_PRICED, LATE_OPTS);
   CHECKIN.lateCheckoutPrice = price;
   DEP_SLOTS.push({
-    v: '23:00', t: '11:00 PM', tag: 'Late night access', tagClass: 'tag-overnight',
+    v: '23:00', t: '11:00 PM', tag: 'Super late check-out', tagClass: 'tag-overnight',
     price, lateNight: true,
     offHint: 'Check-out any time before 11:00 PM for the cost of $' + price + '.'
   });
@@ -3191,7 +3203,7 @@ function renderArrNote() {
     // reads differently from the hourly early check-in (no fixed "ready from" time —
     // the apartment is simply theirs when they land).
     const isOvernight = v === '06:00';
-    const headLabel = isOvernight ? 'Overnight access added' : 'Early check-in added';
+    const headLabel = isOvernight ? 'Super early check-in added' : 'Early check-in added';
     const subLine = isOvernight
       ? 'You have the apartment from the night before — arrive any time.'
       : `Your apartment is guaranteed ready from ${timeLabel(ARR_SLOTS, v)}.`;
@@ -3223,7 +3235,7 @@ function renderDepNote() {
   // reads like the arrival mirror (they keep the apartment through the day) rather
   // than the hourly "welcome to stay until X".
   const isLateNight = v === '23:00';
-  const depHeadLabel = isLateNight ? 'Late night access added' : 'Late check-out added';
+  const depHeadLabel = isLateNight ? 'Super late check-out added' : 'Late check-out added';
   const depSubLine = isLateNight
     ? 'You keep the apartment through the day — leave any time.'
     : `You’re welcome to stay until ${timeLabel(DEP_SLOTS, v)}.`;
@@ -3258,8 +3270,8 @@ function renderUpsell() {
     return;
   }
   const rows = [];
-  if (state.earlyCheckin) rows.push(addonRow(state.earlyCheckin === '06:00' ? 'Overnight access' : 'Early check-in', EARLY_OPTS, state.earlyCheckin));
-  if (state.lateCheckout) rows.push(addonRow(state.lateCheckout === '23:00' ? 'Late night access' : 'Late check-out', LATE_OPTS, state.lateCheckout));
+  if (state.earlyCheckin) rows.push(addonRow(state.earlyCheckin === '06:00' ? 'Super early check-in' : 'Early check-in', EARLY_OPTS, state.earlyCheckin));
+  if (state.lateCheckout) rows.push(addonRow(state.lateCheckout === '23:00' ? 'Super late check-out' : 'Late check-out', LATE_OPTS, state.lateCheckout));
   if (rows.length) {
     list.innerHTML = rows.join('')
       + (total > 0 ? `<div class="up-row up-total"><span class="up-k">Subtotal</span><span class="up-v">$${total}</span></div>` : '');
@@ -5067,10 +5079,10 @@ async function loadBooking() {
     // preview, AND Hostaway confirms the night is free. So the form simply trusts
     // `available` — no extra client-side ?ov check (that bug kept the slot hidden
     // from real guests even after the live flag was flipped).
-    if (data.overnight && data.overnight.available) injectOvernightSlot(data.overnight);
+    if (data.overnight && data.overnight.available) injectOvernightSlot(data.overnight, data.prior && data.prior.earlyCheckin);
     // Water's Edge offer showing → warm up Stripe.js now so the pay sheet opens fast.
     if (data.aeEarly && data.aeEarly.available && data.payments && data.payments.live) { try { ensureStripeJs(); } catch (_) {} }
-    if (data.lateCheckout && data.lateCheckout.available) injectLateCheckoutSlot(data.lateCheckout);
+    if (data.lateCheckout && data.lateCheckout.available) injectLateCheckoutSlot(data.lateCheckout, data.prior && data.prior.lateCheckout);
     // Water's Edge paid early check-in (UAE) — injected after applyMarket() in boot.
     if (data.aeEarly) CHECKIN.aeEarly = data.aeEarly;
     if (data.aeLate) CHECKIN.aeLate = data.aeLate;   // Water's Edge paid late check-out
