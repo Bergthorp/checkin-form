@@ -1878,7 +1878,7 @@
           <span>
             <span class="dx-kicker">Recommended by your host</span>
             <span class="dx-title">A private car from the airport to your door</span>
-            <span class="dx-sub">Your driver meets you at Keflavík Airport and takes you straight to <span id="xferStreet">your apartment</span>. One price per car, not per person.</span>
+            <span class="dx-sub">Your driver meets you at Keflavík Airport and takes you straight to your apartment. One price per car, not per person.</span>
           </span>
         </div>
         <a class="dx-cta" id="xferIn" href="#" target="_blank" rel="noopener sponsored">Book my airport pick-up →</a>
@@ -4953,8 +4953,6 @@ function applyMarket() {
   if (MARKET.airportTransfer) { $('#xferIn').href = MARKET.airportTransfer.in; $('#xferOut').href = MARKET.airportTransfer.out; }
   if (CHECKIN.transferAddress) {
     const addr = CHECKIN.transferAddress;
-    const street = document.createElement('b'); street.textContent = addr.split(',')[0];
-    $('#xferStreet').replaceChildren(street);
     $('#xferAddr').textContent = addr;
     $('#xferAddrNote').hidden = false;
   }
